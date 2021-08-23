@@ -1,0 +1,58 @@
+---
+show: true
+id: fin1
+tags:
+    - Network
+    - Web
+CVSS: 0
+affects:
+    - http://192.168.0.1/index.html
+    - http://192.168.0.2/index.html
+summary: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+implication: sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+solution: >
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+            sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+            nisi ut aliquip ex ea commodo consequat.
+author: 
+    - John Smith
+    - Jane Doe
+references:
+    - BID-123
+    - CVS-2018-8079
+    - CWE-123
+    - CVE-345
+comment:
+    - 2021-06-01 09:30:00: Check the exploit is working still
+---
+
+!FRONTMATTER this, table(CVSS, references, author)
+
+
+# Summary
+
+lol
+
+# Implication
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+# Solution
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam.
+
+# Reproduction
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+nisi ut aliquip ex ea commodo consequat.
+
+# Affects
+
+!FRONTMATTER this, list(affects)
+

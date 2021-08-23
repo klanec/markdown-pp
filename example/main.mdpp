@@ -1,0 +1,43 @@
+# REPORT
+
+## Executive Summary 
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+nisi ut aliquip ex ea commodo consequat.
+
+## Summary of all findings
+
+!FRONTMATTER all, table(CVSS, summary, implication, solution)
+
+and using the pandas and tabulate library::
+
+!FRONTMATTER all, table.pandas(CVSS, summary, implication, solution)
+
+## Network Findings
+
+### Summary of Network Findings
+!FRONTMATTER tags.NETWORK, table(CVSS, summary, implication, solution)
+
+### Finding 1
+!INCLUDE "findings/finding.mdpp", 3
+
+### Finding 2
+!INCLUDE "findings/finding2.mdpp", 3
+
+### Finding 3
+!INCLUDE "findings/finding3.mdpp", 3
+
+
+!FRONTMATTER tags.network, CAUSE_ERROR_WRONG_STRUCTURE(CVSS, summary, implication, solution)
+
+!FRONTMATTER tags.NOTFOUND, CAUSE_ERROR_NO_DATA(CVSS, summary, implication, solution)
+
+!COMMENT "This is a default Blue comment"
+
+!COMMENT "This is a Green comment" Green
+
+!TODO "This is a default Red TODO tag"
+
+!TODO "This is a pretty Purple TODO tag" Purple

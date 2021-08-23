@@ -10,6 +10,7 @@ from __future__ import unicode_literals
 import argparse
 import sys
 import MarkdownPP
+import datetime
 
 import os
 import time
@@ -68,10 +69,15 @@ def main():
 
     parser.add_argument('-o', '--output', help='Output file name. If no '
                         'output file is specified, writes output to stdout.')
+
     parser.add_argument('-e', '--exclude', help='List of modules to '
                         'exclude, separated by commas. Available modules: '
                         + ', '.join(MarkdownPP.modules.keys()))
+
+    parser.add_argument('-t', '--timestamp', help='Wrap output to timestamped output directory')
     args = parser.parse_args()
+
+    timestamp = None
 
     # If watch flag is on, watch dirs instead of processing individual file
     if args.watch:
@@ -95,8 +101,14 @@ def main():
 
     else:
         mdpp = open(args.FILENAME, 'r')
-        if args.output:
-            md = open(args.output, 'w')
+        if args.output:  
+            output = args.output   
+            if args.timestamp:
+                now = datetime.datetime.now()
+                timestamp = str(now.strftime("%Y%m%d_%H%M%S"))
+                os.mkdir(timestamp)
+                output = os.path.join(timestamp, args.output)
+            md = open(output, 'w')
         else:
             md = sys.stdout
 
@@ -109,7 +121,7 @@ def main():
                 else:
                     print('Cannot exclude ', module, ' - no such module')
 
-        MarkdownPP.MarkdownPP(input=mdpp, output=md, modules=modules)
+        MarkdownPP.MarkdownPP(input=mdpp, output=md, modules=modules, timestamp=timestamp)
 
         mdpp.close()
         md.close()

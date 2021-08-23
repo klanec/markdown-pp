@@ -53,6 +53,7 @@ class Processor:
             transforms.sort(key=lambda x: x.linenum, reverse=True)
 
             for transform in transforms:
+                #print(transform.data)
                 linenum = transform.linenum
 
                 if isinstance(transform.data, basestring):
@@ -72,6 +73,7 @@ class Processor:
 
                 elif transform.oper == "noop":
                     pass
+
 
     def output(self, file):
         """

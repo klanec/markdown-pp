@@ -16,7 +16,7 @@ class MarkdownPP:
     Automatically executes the preprocessor with the requested modules.
     """
 
-    def __init__(self, input=None, output=None, modules=None, encoding=None):
+    def __init__(self, input=None, output=None, modules=None, encoding=None, timestamp=None):
         if encoding == None:
             encoding = sys.getdefaultencoding()
         pp = Processor(encoding)
