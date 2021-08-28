@@ -1,13 +1,14 @@
 # TODO:
 
 - [ ] Handle project directory nicely
+  - [ ] add -stdout flag, default to normal behaviour with file output  
+  - [ ] remove frontmatter.yaml files after run
 - [ ] Add debug, info and error level logging to entire project. 
-  - [ ] Add argparse command option to enable / disable
 - [ ] Add argparse for all added options:
   - [ ] Logging yes/no
   - [ ] quiet (suppress TODO / ERROR from terminal output)
   - [ ] output directory (all artefacts output to one dir with timestamp by default)
-
+- [?] Migrate to click arg parsing?
 
 
 ## Include.py module
@@ -24,6 +25,10 @@
 - [ ] Don't Search recursively for frontmatter.yaml. Should be in defined location.
 - [ ] Add the ability to output `plain(field)` for text output
 
+## Error.py module
+
+- [ ] add output to terminal as to which file caused error and which line
+
 ## TableOfErrors.py module
 
 - [ ] Add code for recognizing error tags
@@ -35,8 +40,9 @@
 
 ## !TOC
 
-- [ ] Change regex to accept !TABLE_OF_CONTENTS also
+- [ ] Change regex to accept !TABLE_OF_CONTENTS and !CONTENTS_TABLE
 
 ## Testing
 
 - [ ] For the love of god, implement testing
+- [ ] add documentation for new functionality
