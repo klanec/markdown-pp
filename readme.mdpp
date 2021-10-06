@@ -1,3 +1,6 @@
+!TOT
+
+!TOE
 
 Markdown Preprocessor (MarkdownPP)
 ==================================
@@ -19,40 +22,23 @@ As an example, this document in raw format is named "readme.mdpp", and the
 generated document from MarkdownPP is named "readme.md" so that GitHub can find
 and process that document when viewing the repository.
 
-[![Build Status](https://travis-ci.org/jreese/markdown-pp.svg?branch=master)](https://travis-ci.org/jreese/markdown-pp)
-
-!TOC
+!TABLE_OF_CONTENTS level 3
 
 Installation and Usage
 ----------------------
 
-Currently, you'll need to download the source code from [GitHub][repo] or clone
-the repository, and the run the installation script manually.
+Pull this repository and run `python3 setup.py install`
 
-    pip install MarkdownPP
+Make sure to install the requirements:
 
-There are two components to the project: a Python module, `MarkdownPP`, and a
-Python script that acts as a simple command line interface to the module,
-`markdown-pp`.
+- pandas
+- pyyaml
+- tabulate
 
-Assuming you have a file named `foo.mdpp`, you can generate the preprocessed
-file `foo.md` by running the following command:
+Arguments
+---------
 
-    $ markdown-pp foo.mdpp -o foo.md
-
-If you do not specify an output file name, the results will be printed to
-stdout, enabling them to be piped to another command.
-
-By default, all available modules are enabled. You can specify a list of
-modules to exclude:
-
-    $ markdown-pp foo.mdpp -o foo.md -e latexrender,youtubembed
-
-To see usage instructions, including a list of enabled modules, supply the
--h or --help arguments:
-
-    $ markdown-pp --help
-
+!TODO "Explain command line arguments"
 
 Modules
 --------
@@ -103,7 +89,14 @@ parameter will yield:
     ### Foo
     #### Bar
 
+Finally, the Include module will also handle embedded images such that the
+output file has valid links regardless of where they were relative to the 
+input file.
+
 ### IncludeURLs
+
+Since this module makes external calls, it is disabled by default. Include it 
+explicitly with `-i`/`--incude` or by running all modules with `-a`/`--all`
 
 Facilitates the inclusion of remote files, such as files kept in a subversion
 or GitHub repository. Like Include, the IncludeURL module can replace a line of
@@ -196,9 +189,97 @@ Compiling `index.mdpp` with IncludeCode module will produce the following:
 The biggest feature provided by MarkdownPP is the generation of a table of
 contents for a document, with each item linked to the appropriate section of the
 markup.  The table is inserted into the document wherever the preprocessor finds
-`!TOC` at the beginning of a line.  Named `<a>` tags are inserted above each
+`!TOC` or `!TABLE_OF_CONTENTS` at the beginning of a line.  Named `<a>` tags are inserted above each
 Markdown header, and the headings are numbered hierarchically based on the
-heading tag that Markdown would generate.
+heading tag that Markdown would generate. The module also supports specifying the header level to
+include in the output table by adding the number (1 to 6) after the tag. See below:
+
+Usage:
+`!TOC` Generates table of contents up to 6th subheading
+`!TOC 3` Generates table of contents up to 3rd subheading
+`!TOC level 4` Generates table of contents up to 4th subheading ('level' string optional for readability)
+`!TOC` can be substituted with `!TABLE_OF_CONTENTS`
+
+### Frontmatter
+
+!TODO "make this description more comprehensible"
+
+In the Include module, yaml frontmatter is parsed at the start of any markdown file included with the Include
+module. This module allows you to then arrange that collected data in a variety of useful ways.
+
+The syntax is:
+
+`!FRONTMATTER selector, data_structure(data1, data2, data3)`
+
+where `selector` refers to WHAT data you want. 
+
+`!FRONTMATTER animal.dog, table(name, breed, owner)`
+
+`!FRONTMATTER id.finding34, list(references)`
+
+**Supported shorthand selectors**
+- this (shorthand for the current file. The file's `id` tag will be dropped in its place)
+- all (simply use all frontmatter)
+
+**Supported data structures**
+- plain (output as string)
+- list
+- table
+
+### Comment
+
+This module allows you to add two types of comments to the output file. These will be rendered in colour
+such that they stand out. The 2 comment types as follows:
+
+`!COMMENT "This is a default Blue comment"`
+`!TODO "This is a default Red TODO tag"`
+
+becomes:
+
+!COMMENT "This is a default Blue comment"
+
+!TODO "This is a default Red TODO tag"
+
+You can even change the colors (HTML colours are supported)
+
+`!COMMENT "This is a Green comment" Green`
+`!TODO "This is a pretty Purple TODO tag" Purple`
+
+becomes:
+
+!COMMENT "This is a Green comment" Green
+
+!TODO "This is a pretty Purple TODO tag" Purple
+
+Another important function of the Comment module is the ability to generate a dynamic table
+of all TODOs in the final output.
+
+simply adding the `!TABLE_OF_TODOS` or `!TOT` for short will give the below:
+
+!TOT
+
+Searching the `Search Me` token will show the corresponding error.
+
+### Error
+
+The Error module handles formatting `!ERROR` tags, which are placed automatically
+where the preprocessor has failed in some way. This tag does not need to be used
+manually. 
+
+There is however a `!TABLE_OF_ERRORS` module, or `!TOE` for short. This will drop in
+a table will a list of all errors in the document and a hex ID to search for the error
+in your text editor. Adding a tag that will fail will demonstrate this:
+
+`!FRONTMATTER all, shaolin(shadow, boxing)`
+
+The oputput is:
+
+!FRONTMATTER all, shaolin_shadow_boxing(wutang, sword, stlye)
+
+And the table of errors:
+
+!TOE
+
 
 ### Reference
 
@@ -209,7 +290,12 @@ generated reference list follows the same alternate linking method to ensure
 consistency in your document, but the link need not be referenced anywhere in
 the document to be included in the list.
 
+Note, only links in the format `[name]: <url> "Title"` are included in the list.
+
 ### LaTeX Rendering
+
+Since this module relies on an external service to generate pngs from LaTeX,
+it is disabled by default. Include it explicitly with `-i`/`--incude` or `-a`/`--all`
 
 Lines and blocks of lines beginning and ending with $ are rendered as LaTeX,
 using [QuickLaTeX](http://www.holoborodko.com/pavel/quicklatex/).
@@ -224,6 +310,9 @@ becomes
 
 
 ### YouTube Embeds
+
+Since this module makes external calls it is disabled by default. 
+Include it explicitly with `-i`/`--incude` or `-a`/`--all`
 
 As GitHub-flavored Markdown does not allow embed tags, each line of the form
 `!VIDEO "[youtube url]"` is converted into a screenshot that links to the video,

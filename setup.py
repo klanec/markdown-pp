@@ -32,10 +32,11 @@ setup(
     packages=['MarkdownPP', 'MarkdownPP/Modules'],
     entry_points={
         'console_scripts': [
-            'markdown-pp = MarkdownPP.main:main'
+            'mdpp = MarkdownPP.main:cli'
         ],
     },
     install_requires=[
-        'Watchdog >= 0.8.3',
+        # 'Watchdog >= 0.8.3',
+        'Click'
     ],
 )

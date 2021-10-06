@@ -1,0 +1,50 @@
+# REPORT
+
+!TOC level 3
+
+!TOE
+
+!TOT
+
+# TOP LEVEL IMAGE
+![top level embed](/home/klanec/Pictures/klanec.png)
+
+# BROKEN IMAGE
+![top level embed](/home/klanec/Pictures/klssanec.png)
+
+## two
+
+### three
+
+#### four
+
+##### five
+
+# IMAGES
+!INCLUDE "findings/images.mdpp"
+
+# INCLUDE CODE SIMPLE
+!INCLUDECODE "hello.py"
+
+# INCLUDE CODE MAIN ONLY + PYTHON
+!INCLUDECODE "hello.py" (python), 3:4
+
+
+!FRONTMATTER this, table(lol)
+
+
+!COMMENT "This is a default Blue comment"
+
+!COMMENT "This is a Green comment" Green
+
+!TODO "This is a default Red TODO tag"
+
+!TODO "This is a pretty Purple TODO tag" Purple
+
+[wikipedia](www.wikipedia.org)
+
+[test]: www.example.com "example"
+
+[lol]: www.example.com "wol"
+
+!REF

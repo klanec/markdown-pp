@@ -10,10 +10,15 @@ import re
 from MarkdownPP.Module import Module
 from MarkdownPP.Transform import Transform
 
-tocre = re.compile(r"^!TOC(\s+[1-6])?\s*$")
+tocre = re.compile(r"^!(TOC|TABLE_OF_CONTENTS)\s?(level\s?)?([1-6])?\s*?$") 
+# Match group 1 contains the tag (TOC), group2 contains string 'level' (optional), group 3 is the subheader number
+
 atxre = re.compile(r"^(#+)\s*(.+)$")
+
 setextre = re.compile(r"^(=+|-+)\s*$")
+
 fencedcodere = re.compile(r"^```[ \w]*$")
+
 linkre = re.compile(r"(\[(.*?)\][\(\[].*?[\)\]])")
 
 
@@ -21,8 +26,10 @@ class TableOfContents(Module):
     """
     Module for auto-generating a table of contents based on the Markdown
     headers in the document.  The table of contents is inserted in the document
-    wherever a `!TOC` marker is found at the beginning of a line.
+    wherever a `!TOC` or `!TABLE_OF_CONTENTS` marker is found at the beginning of a line.
     """
+    DEFAULT = True
+    REMOTE = False
 
     @staticmethod
     def clean_html_string(string):
@@ -74,7 +81,7 @@ class TableOfContents(Module):
             match = tocre.search(line)
             if match:
                 tocfound = True
-                depth = match.group(1)
+                depth = match.group(3)
                 if depth is not None:
                     depth = int(depth)
                     tocdepth = max(depth, tocdepth)

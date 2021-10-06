@@ -1,21 +1,26 @@
 #!/usr/bin/env python
 
 # Copyright (C) 2010 John Reese
+# Modified in 2021 with love by Nicholas Harris
+
 # Licensed under the MIT license
 
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import argparse
 import sys
 import MarkdownPP
-import datetime
+import click
+import sys
+import logging
 
-import os
-import time
-from watchdog.observers import Observer
-from watchdog.events import PatternMatchingEventHandler
+from os import path
+from os import mkdir, access, getcwd
+from os import W_OK, X_OK
+
+from MarkdownPP import Modules
+from MarkdownPP.Common import PROJECT_DIR
 
 
 # Terminal output ANSI color codes
@@ -24,108 +29,94 @@ class colors:
     MAGB = '\033[35;49;1m'
     GREEN = '\033[32;49;22m'
     NORMAL = '\033[0m'
+    RED = '\033[91m'
 
 
-# Custom event handler for watchdog observer
-class MarkdownPPFileEventHandler(PatternMatchingEventHandler):
-    # Look for .mdpp files
-    patterns = ["*.mdpp"]
-
-    def process(self, event):
-        modules = MarkdownPP.modules.keys()
-        mdpp = open(event.src_path, 'r')
-
-        # Output file takes filename from input file but has .md extension
-        md = open(os.path.splitext(event.src_path)[0]+'.md', 'w')
-        MarkdownPP.MarkdownPP(input=mdpp, output=md, modules=modules)
-
-        # Logs time and file changed (with colors!)
-        print(time.strftime("%c") + ":",
-              colors.MAGB + event.src_path,
-              colors.GREEN + event.event_type,
-              "and processed with MarkdownPP",
-              colors.NORMAL)
-
-    def on_modified(self, event):
-        self.process(event)
-
-    def on_created(self, event):
-        self.process(event)
+# Create help string
+help_str = '\b\nModules:\n '
+for name in Modules.modules:
+    m = Modules.modules[name]()
+    d = 'enabled |' if m.DEFAULT else '* disabled |'
+    r = (colors.RED + 'REMOTE CALLS' + colors.NORMAL) if m.REMOTE else (colors.GREEN + 'local only' + colors.NORMAL)
+    help_str += "\n{: >18} {: >12} {: >15}".format(f'{name} |', d, r)
 
 
-def main():
-    # setup command line arguments
-    parser = argparse.ArgumentParser(description='Preprocessor for Markdown'
-                                     ' files.')
+@click.command(help=help_str)
+@click.option('--output', '-o', help='Output single file.', type=click.File(mode='w'))
+@click.option('--collect', '-c', help='Output self-contained report and all files to a directory.', type=click.Path(dir_okay=True, file_okay=False)) # Add timestamp by default
+@click.option('--include', '-i', help='Run only the specified modules (comma separated)', type=str)
+@click.option('--exclude', '-e', help='Run all modules except the specified modules (comma separated)', type=str)
+@click.option('--all-modules', '-a', help='Run all modules', is_flag=True)
+@click.option('--log', '-l', help='Enable debug, warn and error logging', is_flag=True)                # Not yet implemented
+@click.argument('input', type=click.File(mode='r'))
+def cli(output, collect, include, exclude, all_modules, log, input):
 
-    parser.add_argument('FILENAME', help='Input file name (or directory if '
-                        'watching)')
-
-    # Argument for watching directory and subdirectory to process .mdpp files
-    parser.add_argument('-w', '--watch', action='store_true', help='Watch '
-                        'current directory and subdirectories for changing '
-                        '.mdpp files and process in local directory. File '
-                        'output name is same as file input name.')
-
-    parser.add_argument('-o', '--output', help='Output file name. If no '
-                        'output file is specified, writes output to stdout.')
-
-    parser.add_argument('-e', '--exclude', help='List of modules to '
-                        'exclude, separated by commas. Available modules: '
-                        + ', '.join(MarkdownPP.modules.keys()))
-
-    parser.add_argument('-t', '--timestamp', help='Wrap output to timestamped output directory')
-    args = parser.parse_args()
-
-    timestamp = None
-
-    # If watch flag is on, watch dirs instead of processing individual file
-    if args.watch:
-        # Get full directory path to print
-        p = os.path.abspath(args.FILENAME)
-        print("Watching: " + p + " (and subdirectories)")
-
-        # Custom watchdog event handler specific for .mdpp files
-        event_handler = MarkdownPPFileEventHandler()
-        observer = Observer()
-        # pass event handler, directory, and flag to recurse subdirectories
-        observer.schedule(event_handler, args.FILENAME, recursive=True)
-        observer.start()
-
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            observer.stop()
-        observer.join()
-
-    else:
-        mdpp = open(args.FILENAME, 'r')
-        if args.output:  
-            output = args.output   
-            if args.timestamp:
-                now = datetime.datetime.now()
-                timestamp = str(now.strftime("%Y%m%d_%H%M%S"))
-                os.mkdir(timestamp)
-                output = os.path.join(timestamp, args.output)
-            md = open(output, 'w')
+    # Save the input file path 
+    PROJECT_DIR.INPUT_FILE = path.abspath(input.name)
+ 
+    # Set modules to run
+    modules = list(MarkdownPP.modules)
+    if include and exclude:
+        click.echo("Can't include and exclude modules!")
+        return -1
+    elif include or exclude:
+        # Check included/excluded are legal modules, set modules to process
+        input_modules = include.split(',') if include else exclude.split(',')
+        illegal = [module for module in input_modules if (module not in modules) and module]
+        if illegal:
+            click.echo(f'Illegal modules: {", ".join(illegal)}')
+            return -1
+        if include:
+            modules = input_modules
         else:
-            md = sys.stdout
+            modules = [mod for mod in modules if mod not in input_modules]
+    elif not all_modules:
+        # Run default only unless all_modeuls is true
+        modules = [name for name in Modules.modules if Modules.modules[name]().DEFAULT]
+    
+    # Handle output file / directory
+    PROJECT_DIR.CONVERT_TO_ABSOLUTE_PATHS = not collect # If not collect, convert all embedded images to absolute path
+    if output and collect:
+        click.echo("Won't output to a file and a directory at the same time. chose either --output or --collect.")
+        return -1
+    if not output and not collect:
+        # Set output to stdout if no other specified.
+        output = sys.stdout
+    if collect:
+        PROJECT_DIR.MOVE_FILES_TO_PROJECT_DIR = True
+        collection_dir = path.abspath(collect)
+        # Make a directory if it doesn't exist
+        if not path.exists(collection_dir):
+            try:
+                mkdir(collection_dir)
+            except FileNotFoundError:
+                click.echo('Path to directory must be valid. Only collection directory will be created')
+                return -1
+        # Set output to be in collection directory
+        output = open(path.join(collection_dir, 'Report.md'), mode='w')
+        if path.isdir(collection_dir) and access(collection_dir, W_OK | X_OK):
+            # If collection dir is a directory and writable, set accordingly
+            PROJECT_DIR.TOPLEVEL = collection_dir
+            PROJECT_DIR.IMAGES_DIR = path.join(collection_dir, 'images')
+            PROJECT_DIR.FRONTMATTER_FILE = path.join(collection_dir, 'frontmatter.yaml')
+            PROJECT_DIR.LOG_FILE = path.join(collection_dir, 'debug.log')
+        else:
+            click.echo(f'Make sure collection directory is not a file and is writable.\n\t{collect} ')
+            return -1
+    else:
+        # Otherwise set current working directory
+        cwd = getcwd()
+        PROJECT_DIR.TOPLEVEL = cwd
+        PROJECT_DIR.IMAGES_DIR = path.join(cwd, 'images')
+        PROJECT_DIR.FRONTMATTER_FILE = path.join(cwd, 'frontmatter.yaml')
+        PROJECT_DIR.LOG_FILE = path.join(cwd, 'debug.log')
 
-        modules = list(MarkdownPP.modules)
-
-        if args.exclude:
-            for module in args.exclude.split(','):
-                if module in modules:
-                    modules.remove(module)
-                else:
-                    print('Cannot exclude ', module, ' - no such module')
-
-        MarkdownPP.MarkdownPP(input=mdpp, output=md, modules=modules, timestamp=timestamp)
-
-        mdpp.close()
-        md.close()
 
 
-if __name__ == "__main__":
-    main()
+    # Run preprocessor
+    MarkdownPP.MarkdownPP(input=input, output=output, modules=modules)
+
+    # Close the handlers
+    input.close()
+    if output:
+        output.close()

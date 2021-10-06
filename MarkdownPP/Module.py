@@ -12,7 +12,8 @@ class Module:
     This class provides a generic interface for the preprocessor to pass
     data to the module and retrieve a list of Transforms to the data.
     """
-
+    DEFAULT = False
+    REMOTE = True
     priority = 5
     """
     Priority is defined as a range of integers with 0 being highest priority,

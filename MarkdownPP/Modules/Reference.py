@@ -13,13 +13,14 @@ from MarkdownPP.Transform import Transform
 refre = re.compile(r"^!REF\s*$")
 linkre = re.compile(r"^\[([^\]]+)\]:\s+(\S+)(?:\s*[\"'\(](.+)[\"'\(]\s*)?$")
 
-
 class Reference(Module):
     """
     Module for auto-generating a list of reference links used in the document.
     The referenc list is inserted wherever a `!REF` marker is found at the
     beginning of a line.
     """
+    DEFAULT = True
+    REMOTE = False
 
     def transform(self, data):
         transforms = []

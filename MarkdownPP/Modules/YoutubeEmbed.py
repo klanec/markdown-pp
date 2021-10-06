@@ -26,6 +26,8 @@ class YoutubeEmbed(Module):
     Converts Youtube embed objects into links with screenshots,
     taken from Youtube.
     """
+    DEFAULT = False
+    REMOTE = True
 
     def transform(self, data):
         transforms = []

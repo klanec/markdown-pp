@@ -1,5 +1,8 @@
 from MarkdownPP.Module import Module
 from MarkdownPP.Transform import Transform
+from MarkdownPP.Common import markdown_table
+
+from secrets import token_hex
 
 import os
 import re
@@ -24,26 +27,50 @@ class Comment(Module):
 
     This module also handles the !ERROR tag but this is for the preprocessor to mark tags it failed to process for the user. Not intended to be used manually
     """
-    commentre =  re.compile(r'^!(COMMENT|TODO|ERROR)\s?\"(.+)\"\s?([a-zA-Z]*)\s?(<!--.*-->)?$')#^!(COMMENT|TODO)\s?\"(.*)\"\s?([a-zA-Z]*)$')
+    DEFAULT = True
+    REMOTE = False
+
+    commentre =  re.compile(r'^!(COMMENT|TODO)\s?\"(.+)\"\s?([a-zA-Z]*)\s?(<!--.*-->)?$')
+    # Match group 1 -> COMMENT|TODO
+    # Match group 2 -> the comment/todo string
+    # Match group 3 (optional) -> HTML style comment following tag
+
+    table_of_todo_re = re.compile(r'^!(TABLE_OF_TODOS|TOT)$')
 
     priority = 1
 
     def transform(self, data):
         transforms = []
-
+        todos = []
         linenum = 0
         for linenum, line in enumerate(data):
             match = self.commentre.search(line)
             if match:
-                comment = self.process_comment(match)
+                err_nonce = ''
+                if 'TODO' in match.group(1):
+                    err_nonce = token_hex(5)
+                    todos.append((err_nonce, match.group(2)))
+                comment = self.process_comment(match, err_nonce=err_nonce)
                 transform = Transform(linenum=linenum, oper='swap',
                                         data=comment)
                 transforms.append(transform)
-
+       
+        for linenum, line in enumerate(data):
+            # Go through again searching for the !TABLE_OF_TODOS tag
+            tot_match = self.table_of_todo_re.search(line)
+            if tot_match:
+                todos_hdr = [('Search Me', 'TO DO')] + todos
+                table = markdown_table(todos_hdr, first_row_header=True)
+                
+                title_transform = Transform(linenum=linenum, oper='prepend', data=['\n**Table of TODOs**\n'])
+                table_transform = Transform(linenum=linenum, oper='swap', data=table)
+                
+                transforms.append(table_transform)
+                transforms.append(title_transform)
         return transforms
 
 
-    def process_comment(self, match):
+    def process_comment(self, match, err_nonce=''):
         '''
         Takes the comment or todo tag and returns the appropriate HTML colored <span> tag
         '''
@@ -56,10 +83,10 @@ class Comment(Module):
             color = {
                 'COMMENT':'DodgerBlue',
                 'TODO':'OrangeRed',
-                'ERROR':'FireBrick'
+                # 'ERROR':'FireBrick'
             }[comment_type]
-
-        formatted = self.color(comment, c=color)
+        err_nonce = f" ({err_nonce})" if err_nonce else ""
+        formatted = f'<span style="color:{color}">{comment}{err_nonce}</span>{err if err else ""}\n'
 
         if err:
             formatted = formatted.rstrip() + ' ' + err + '\n'
@@ -68,6 +95,6 @@ class Comment(Module):
 
 
 
-    @staticmethod
-    def color(text, c='blue', end='\n'):
-        return f'<span style="color:{c}">{text}</span>{end}'
+    # @staticmethod
+    # def color(text, c='blue', end='\n'):
+    #     return f'<span style="color:{c}">{text}</span>{end}'

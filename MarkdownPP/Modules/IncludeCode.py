@@ -9,23 +9,43 @@ import re
 
 from os import path
 
-from MarkdownPP.Modules.Include import Include
+from MarkdownPP.Module import Module
+from MarkdownPP.Transform import Transform
+#from MarkdownPP.Modules.Include import Include
 
 
-class IncludeCode(Include):
+class IncludeCode(Module):
     """
     Module for recursively including the contents of other local code
     files into the current document using a command like
     `!INCLUDECODE "codes/mycode.py"`.
     Targets must be valid, absolute urls.
     """
-
-    includere = re.compile(r"^!INCLUDECODE\s+(?:\"([^\"]+)\"|'([^']+)')"
+    DEFAULT = True
+    REMOTE = False
+        
+    includecodere = re.compile(r"^!INCLUDECODE\s+(?:\"([^\"]+)\"|'([^']+)')"
                            r"(?:\s*\(\s*(.*)\s*\)\s*)?"
                            r"\s*(?:,\s*(\d+|(\d*:\d*)))?\s*$")
 
     # include code should happen after includes, but before everything else
     priority = 0.1
+
+
+    def transform(self, data):
+        transforms = []
+
+        linenum = 0
+        for line in data:
+            match = self.includecodere.search(line)
+
+            if match:
+                include_code_data = self.include_code(match)
+                transform = Transform(linenum=linenum, oper="swap", data=include_code_data)
+                transforms.append(transform)
+            
+            linenum += 1
+        return transforms
 
     def _select_lines(self, code_file, lines):
         # No lines given
@@ -45,7 +65,7 @@ class IncludeCode(Include):
         # Line counting starts at 1. Need to offset by -1
         return code_file[(from_line - 1):to_line]
 
-    def include(self, match, pwd=""):
+    def include_code(self, match, pwd=""):
         code_file = match.group(1) or match.group(2)
         lang = match.group(3)
         lines = match.group(4)

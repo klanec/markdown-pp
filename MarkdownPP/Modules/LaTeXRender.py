@@ -35,6 +35,8 @@ class LaTeXRender(Module):
     Module for rendering LaTeX enclosed between $ dollar signs $.
     Rendering is performed using QuickLaTeX via ProblemSetMarmoset.
     """
+    DEFAULT = False
+    REMOTE = True
 
     def transform(self, data):
         transforms = []

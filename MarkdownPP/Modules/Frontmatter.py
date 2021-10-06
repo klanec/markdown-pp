@@ -1,5 +1,6 @@
 from MarkdownPP.Module import Module
 from MarkdownPP.Transform import Transform
+from MarkdownPP.Common import PROJECT_DIR
 
 import os
 import yaml
@@ -24,6 +25,9 @@ class Frontmatter(Module):
         - Project directory needs to be handled better
         - frontmatter.yaml should have a defined location, not searched for recursively
     """
+    DEFAULT = True
+    REMOTE = False
+    
     columnre = re.compile(f"([^,\(\)\s]+)") # Gets lit of matches for "(a, b, c)"
     frontmatterre = re.compile(r"^!FRONTMATTER\s+([^,]+), *([\w.-]{1,32}\(.*?\)),? *(sort ([\w.-]+)\s(ascending|asc|descending|desc))?\s?$", flags=re.MULTILINE)
     frontmatter = ''
@@ -33,28 +37,20 @@ class Frontmatter(Module):
 
     priority = 0.1
 
-    logging.basicConfig(filename='debug.log', level=logging.DEBUG)
-    logging.debug('class instantiated')
-
     def transform(self, data):
         logging.debug('running tansform()')
         transforms = []
 
-        frontmatter_path = ''
         frontmatter = ''
 
-        # Find and read the YAML frontmatter file
-        for root, dirs, files in os.walk('.'):
-            if 'frontmatter.yaml' in files:
-                frontmatter_path = os.path.join(root, 'frontmatter.yaml')
-        if frontmatter_path:
-            with open(frontmatter_path, 'r') as fp:
+        try:
+            with open(PROJECT_DIR.FRONTMATTER_FILE, 'r') as fp:
                 self.frontmatter = yaml.safe_load(fp.read())
-                logging.debug('transform() -> loaded frontmatter')
-        else:
+                logging.debug('Modules.Frontmatter.transform() -> loaded frontmatter')
+            os.remove(PROJECT_DIR.FRONTMATTER_FILE)
+        except:
             logging.debug('transform() -> Frontmatter path not found!')
-        
-
+                
         linenum = 0
         for line in data: # Go line by line through the mdpp file
             match = self.frontmatterre.search(line) # Find the Frontmatter tags
@@ -69,6 +65,7 @@ class Frontmatter(Module):
                 transforms.append(transform)
 
             linenum += 1
+
 
         return transforms
 
@@ -86,16 +83,19 @@ class Frontmatter(Module):
         if not self.frontmatter:
             return [ f'!ERROR "{match.string.rstrip()}" <!-- !ERROR:  No frontmatter found -->\n']
 
+
+        legal_structures = ['plain', 'table', 'list', 'list.numbers', 'list.bullets']
+
         where=match.group(1)
         format=match.group(2)
         sort_column = match.group(4)
         sort_order = 'asc' if match.group(5) is None else match.group(5)
 
-        formats = ['table', 'list', 'list.numbers', 'list.bullets']
-
         #   "table(a, b, c)" -> structure:"table" and columns:"(a, b, c)"
         structure, columns_str = format.split('(')
         columns = self.columnre.findall(columns_str)
+        if structure not in legal_structures:
+            return [ f'!ERROR "{match.string.rstrip()}" <!-- !ERROR:  Requested data structure not recognized -->\n' ]
 
         # Trim down frontmatter according to input
         data = self.selector(
@@ -112,12 +112,12 @@ class Frontmatter(Module):
 
         # get correct output based on requested data format
         return {
-            'table': lambda d: self.markdown_table_pandas(data=d), # Temporarily set to pandas, which is big but looks nicer
-            'table.pandas': lambda d: self.markdown_table_pandas(data=d), # Not yet implemented
+            'plain': lambda d: self.plain(data=d),
+            'table': lambda d: self.markdown_table(data=d),
             'list': lambda d: self.markdown_list(data=d, t='bullets'),
             'list.bullets':lambda d: self.markdown_list(data=d, t='bullet'),
             'list.numbers':lambda d: self.markdown_list(data=d, t='numbered'),
-        }.get(structure, lambda d: f'!ERROR "{match.string.rstrip()}" <!-- !ERROR:  Requested data structure not recognized -->\n')(data) # CONTINUE HERE.  Test this
+        }[structure](data)
 
     
     @staticmethod
@@ -165,6 +165,39 @@ class Frontmatter(Module):
         return recurse_list(data, t, indent)
 
 
+    @staticmethod
+    def markdown_table(data):
+        '''
+        The filthy cheater's way to get really nice markdwon tables from any input.
+        Requires pandas and tabulate (available through pip)
+
+        parameters:
+            data (list): list of dictionaries
+
+        return:
+            str: markdown table of data
+        '''
+        from pandas import DataFrame
+        df = DataFrame(data).applymap(lambda x: '<ul><li>'+'</li><li>'.join(x)+'</li></ul>' if isinstance(x, list) else x)
+        table = df.to_markdown(index=False, tablefmt="pipe")
+
+        return [l+'\n' for l in table.split('\n') if l]
+
+    @staticmethod
+    def plain(data):
+        ''' Takes a list or string and returns a string (comma separated if list input).
+        '''
+        logging.debug(data)
+        data = list(data[0].values())
+        return [', '.join(data) if isinstance(data, list) else data] #FIXME
+
+
+    @staticmethod
+    def color(text, c='blue', end='\n'): # This needs to be a separate module file
+        return f'<span style="color:{c}">{text}</span>{end}'
+
+
+        
     @staticmethod
     def selector(select, _from, where, sort_col='', sort_ord='asc', not_found='N/A'):
         ''' 
@@ -217,54 +250,3 @@ class Frontmatter(Module):
             output = sorted(output, key=lambda x: x[sort_col], reverse=sort_order=='desc')
 
         return output
-
-
-    @staticmethod
-    def markdown_table(data): # Remove
-        '''
-        Takes a list of dictionaries, build a markdown table
-
-        TODO:
-        - Correctly sort IP addresses
-        '''
-        lines = []
-        normalize = lambda x: '<br>'.join(map(str, x)) if isinstance(x, list) else str(x) # LISTDOWN HERE?
-
-        #REMOVE
-        with open('WAT.txt', 'w') as wp:
-            wp.write(str(data))
-
-        lines.append('|' + '|'.join(data[0].keys()) + '|\n')
-        lines.append('| :----------: ' * len(data[0].keys()) + '|\n')
-        for item in data:
-            for key in item.keys():
-                lines.append('|' + normalize(item.get(key, '')))
-            lines[-1] += '|\n'
-        
-        return lines
-
-
-    @staticmethod
-    def markdown_table_pandas(data):
-        '''
-        The filthy cheater's way to get really nice markdwon tables from any input.
-        Requires pandas and tabulate (available through pip)
-
-        parameters:
-            data (list): list of dictionaries
-
-        return:
-            str: markdown table of data
-        '''
-        from pandas import DataFrame
-        #df = DataFrame(data).applymap(lambda x: '- '+'<br/>- '.join(x) if isinstance(x, list) else x)
-        df = DataFrame(data).applymap(lambda x: '<ul><li>'+'</li><li>'.join(x)+'</li></ul>' if isinstance(x, list) else x)
-        return [l+'\n' for l in df.to_markdown(index=False, tablefmt="pipe").split('\n') if l]
-
-
-    @staticmethod
-    def color(text, c='blue', end='\n'): # This needs to be a separate module file
-        return f'<span style="color:{c}">{text}</span>{end}'
-
-
-        

@@ -8,7 +8,7 @@ CVSS: 0
 affects:
     - http://192.168.0.1/index.html
     - http://192.168.0.2/index.html
-summary: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+summary: SUMMARY ipsum dolor sit amet, consectetur adipiscing elit
 implication: sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 solution: >
             Lorem ipsum dolor sit amet, consectetur adipiscing elit,
@@ -33,6 +33,7 @@ comment:
 # Summary
 
 lol
+!FRONTMATTER this, plain(summary, implication)
 
 # Implication
 
