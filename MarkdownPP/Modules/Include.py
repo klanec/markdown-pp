@@ -12,7 +12,16 @@ from os import path, getcwd, replace
 
 from MarkdownPP.Module import Module
 from MarkdownPP.Transform import Transform
+
 from MarkdownPP.Common import PROJECT_DIR, process_path
+
+from MarkdownPP.Common import frontmatter_regex
+from MarkdownPP.Common import frontmatter_this_regex
+from MarkdownPP.Common import include_code_regex
+from MarkdownPP.Common import embedded_image_regex
+from MarkdownPP.Common import md_title_regex
+
+from MarkdownPP.Common import all_frontmatter
 
 
 class Include(Module):
@@ -24,31 +33,14 @@ class Include(Module):
     DEFAULT = True
     REMOTE = False
     
-    #---- Frontmatter additions
-    # Place to store all front matter collected throughout this module. This will be written to disk as a pickle? yaml? after module completes
-    all_frontmatter = {}
-    vprint = print if False else lambda *a, **k: None # verbose print. set boolean for debugging
-
-    frontmatterre = re.compile(r"\A---(.*?)---\s*(.*?)\s*\Z", flags=re.DOTALL | re.MULTILINE)
-
-    thisre = re.compile(r'!FRONTMATTER\s+this,')
-    #----
-
     # matches !INCLUDE directives in .mdpp files
     includere = re.compile(r"^!INCLUDE\s+(?:\"([^\"]+)\"|'([^']+)')\s*(?:,\s*L?E?V?E?L?\s?(\d+))?\s*$") # New regex allows us to write LEVEL before shift value for clarity
-
-    # matches title lines in Markdown files
-    titlere = re.compile(r"^(:?#+.*|={3,}|-{3,})$")
-
-    # matches images embedded with <img> or ![]() methods
-    imagere = re.compile(r'^(<img |\[?!\[[\w\s=-]*?\]).*?(src="|\()([\w\/.-]+?)([" #\)?])(.*)$')
-    # Link to image in match.group(3)
 
     # matches unescaped formatting characters such as ` or _
     formatre = re.compile(r"[^\\]?[_*`]")
 
     # includes should happen before anything else
-    priority = 0
+    priority = 1
 
     def transform(self, data):
         transforms = []
@@ -56,25 +48,26 @@ class Include(Module):
         linenum = 0
         for line in data:
             match = self.includere.search(line)
-            image_match = self.imagere.search(line)
+            image_match = embedded_image_regex.search(line)
 
             if match:
                 includedata = self.include(match)
                 transform = Transform(linenum=linenum, oper="swap",
                                        data=includedata)
                 transforms.append(transform)
-            
             elif image_match:
                 # Handle images linked to in the top level file (not in included files)
                 embed_img = image_match.group(3)
-                replace_path = process_path(md_file=PROJECT_DIR.INPUT_FILE, img_file_path=embed_img)
+                replace_path = process_path(md_file=PROJECT_DIR.INPUT_FILE, file_to_embed=embed_img, get_abs=(not PROJECT_DIR.COLLECT))
                 if 'Process_path ERROR' in replace_path:
                     new_embed = f'!ERROR "{line.rstrip()}" <!-- !ERROR: {replace_path.split(":")[-1]} -->'
                 else:
                     new_embed = line.replace(embed_img, replace_path)
 
+                print('\n\nTOPLEVEL IMG:\n', embed_img, '\n', replace_path)
                 transform = Transform(linenum=linenum, oper="swap", data=[new_embed])
                 transforms.append(transform)
+            
             linenum += 1
         return transforms
 
@@ -85,16 +78,17 @@ class Include(Module):
                 
             # YAML Frontmatter is detected, parsed and stored in memory
             frontmatter = ''
-            match = self.frontmatterre.match(''.join(data))
+            match = frontmatter_regex.match(''.join(data))
             if match:
                 frontmatter, data = match.groups()         # get yaml frontmatter as string
                 frontmatter = yaml.safe_load(frontmatter)   # get yaml frontmatter as dictionary from string
                 if isinstance(frontmatter, list) or isinstance(frontmatter, dict):
-                    self.all_frontmatter[filename] = frontmatter
+                    #self.all_frontmatter[filename] = frontmatter
+                    all_frontmatter[filename] = frontmatter
                 
                 # Sneakily substitute "!FRONTMATTER this," to "!FRONTMATTER id.id,"
                 this_id = f"id.{frontmatter.get('id', 'UNDEF')}"
-                data = self.thisre.sub(f"!FRONTMATTER {this_id},", data)
+                data = frontmatter_this_regex.sub(f"!FRONTMATTER {this_id},", data)
 
                 data = [line+'\n' for line in data.split('\n')]
 
@@ -104,7 +98,8 @@ class Include(Module):
 
             for line in data:
                 include_match = self.includere.search(line)
-                image_match = self.imagere.search(line)
+                image_match = embedded_image_regex.search(line)
+                include_code_match = include_code_regex.search(line)
 
                 if include_match:
                     dirname = path.dirname(filename)
@@ -118,14 +113,27 @@ class Include(Module):
                     # Handle images linked to in subfiles through the !INCLUDE directive
                     embed_img = image_match.group(3)
 
-                    replace_path = process_path(md_file=filename, img_file_path=embed_img)
+                    replace_path = process_path(md_file=filename, file_to_embed=embed_img, get_abs=(not PROJECT_DIR.COLLECT))
                     new_embed = line.replace(embed_img, replace_path)
 
+                    #print('\n\nSUBFILE IMG:\n', embed_img, '\n', replace_path)
                     data[linenum:linenum+1] = [new_embed]
 
-                if shift :
+                elif include_code_match:
+                    # Make links to included code in sub files absolute such that the includcode module can parse later
+                    code_file = include_code_match.group(1) or include_code_match.group(2)
+                    
+                #    print(path.join(path.dirname(filename), code_file))
+                    replace_path = path.join(path.dirname(filename), code_file)
+                    new_include_code = line.replace(code_file, replace_path)
+
+                    data[linenum:linenum+1] = [new_include_code]
+                    #print(new_include_code)
+                
+
+                if shift:
                     # Applies shift to header levels, if specified
-                    titlematch = self.titlere.search(line)
+                    titlematch = md_title_regex.search(line)
                     if titlematch:
                         to_del = []
                         for _ in range(shift):
@@ -172,9 +180,5 @@ class Include(Module):
                 result += self.include_file(filename, pwd, shift)
         else:
             result.append("")
-
-        if self.all_frontmatter:
-            with open(PROJECT_DIR.FRONTMATTER_FILE, 'w') as fp:
-                fp.write(yaml.dump(self.all_frontmatter))
 
         return result

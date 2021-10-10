@@ -1,6 +1,8 @@
 from MarkdownPP.Module import Module
 from MarkdownPP.Transform import Transform
+
 from MarkdownPP.Common import PROJECT_DIR
+from MarkdownPP.Common import all_frontmatter
 
 import os
 import yaml
@@ -28,32 +30,22 @@ class Frontmatter(Module):
     DEFAULT = True
     REMOTE = False
     
-    columnre = re.compile(f"([^,\(\)\s]+)") # Gets lit of matches for "(a, b, c)"
-    frontmatterre = re.compile(r"^!FRONTMATTER\s+([^,]+), *([\w.-]{1,32}\(.*?\)),? *(sort ([\w.-]+)\s(ascending|asc|descending|desc))?\s?$", flags=re.MULTILINE)
-    frontmatter = ''
+    column_regex = re.compile(f"([^,\(\)\s]+)") # Gets list of matches for "(a, b, c)"
+    fonrtmatter_regex = re.compile(r"^!FRONTMATTER\s+([^,]+), *([\w.-]{1,32}\(.*?\)),? *(sort ([\w.-]+)\s(ascending|asc|descending|desc))?\s?$", flags=re.MULTILINE)
+    
+    frontmatter = all_frontmatter
 
     selectors = ['all', 'this']
     structures = ['bullet.list', 'numbered.list', 'table']
 
-    priority = 0.1
+    priority = 2
 
     def transform(self, data):
         logging.debug('running tansform()')
         transforms = []
-
-        frontmatter = ''
-
-        try:
-            with open(PROJECT_DIR.FRONTMATTER_FILE, 'r') as fp:
-                self.frontmatter = yaml.safe_load(fp.read())
-                logging.debug('Modules.Frontmatter.transform() -> loaded frontmatter')
-            os.remove(PROJECT_DIR.FRONTMATTER_FILE)
-        except:
-            logging.debug('transform() -> Frontmatter path not found!')
-                
         linenum = 0
         for line in data: # Go line by line through the mdpp file
-            match = self.frontmatterre.search(line) # Find the Frontmatter tags
+            match = self.fonrtmatter_regex.search(line) # Find the Frontmatter tags
             if match:
                 logging.debug(f'transform() -> !FRONTMATTER tag found: {str(linenum)}:{match.string.rstrip()}')
                 
@@ -93,7 +85,7 @@ class Frontmatter(Module):
 
         #   "table(a, b, c)" -> structure:"table" and columns:"(a, b, c)"
         structure, columns_str = format.split('(')
-        columns = self.columnre.findall(columns_str)
+        columns = self.column_regex.findall(columns_str)
         if structure not in legal_structures:
             return [ f'!ERROR "{match.string.rstrip()}" <!-- !ERROR:  Requested data structure not recognized -->\n' ]
 

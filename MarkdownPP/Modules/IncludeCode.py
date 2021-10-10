@@ -1,4 +1,5 @@
 # Copyright (C) 2016 Smart Software Solutions, Inc
+# Changes by Nicholas Harris 2021
 # Licensed under the MIT license
 
 from __future__ import absolute_import
@@ -8,11 +9,12 @@ from __future__ import unicode_literals
 import re
 
 from os import path
+from MarkdownPP.Common import PROJECT_DIR
 
 from MarkdownPP.Module import Module
 from MarkdownPP.Transform import Transform
-#from MarkdownPP.Modules.Include import Include
 
+from MarkdownPP.Common import include_code_regex
 
 class IncludeCode(Module):
     """
@@ -23,13 +25,9 @@ class IncludeCode(Module):
     """
     DEFAULT = True
     REMOTE = False
-        
-    includecodere = re.compile(r"^!INCLUDECODE\s+(?:\"([^\"]+)\"|'([^']+)')"
-                           r"(?:\s*\(\s*(.*)\s*\)\s*)?"
-                           r"\s*(?:,\s*(\d+|(\d*:\d*)))?\s*$")
 
     # include code should happen after includes, but before everything else
-    priority = 0.1
+    priority = 2
 
 
     def transform(self, data):
@@ -37,7 +35,7 @@ class IncludeCode(Module):
 
         linenum = 0
         for line in data:
-            match = self.includecodere.search(line)
+            match = include_code_regex.search(line)
 
             if match:
                 include_code_data = self.include_code(match)
@@ -66,7 +64,11 @@ class IncludeCode(Module):
         return code_file[(from_line - 1):to_line]
 
     def include_code(self, match, pwd=""):
+        dirname = path.dirname(PROJECT_DIR.INPUT_FILE)
+
         code_file = match.group(1) or match.group(2)
+        code_file = path.join(dirname, code_file)
+        
         lang = match.group(3)
         lines = match.group(4)
 

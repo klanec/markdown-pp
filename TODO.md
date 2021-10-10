@@ -6,11 +6,16 @@
 ## Frontmatter.py module
 - [ ] Warn on non-unique ID in frontmatter
 
+## Code Include
+Fix includcode from absolute paths
 ## Error.py module
 - [ ] add output to terminal as to which file caused error and which line
 
-### LaTeX Rendering + youtubeembed
+## LaTeX Rendering + youtubeembed
 - [ ] Make sure output png files are adhering to new project directory structure
+
+## INCLUDEDIR
+Add Include dir plugin
 ## Testing
 - [ ] For the love of god, implement testing
 - [ ] add documentation for new functionality

@@ -1,0 +1,11 @@
+
+# TESTING RECURSIVE EMBED OF INCLUDE CODE
+------
+!INCLUDE "findings/pocs.mdpp"
+------
+# Done
+
+# TOP LEVEL
+==========================
+!INCLUDECODE "hello.py" (python), 1:2
+==========================

@@ -1,0 +1,6 @@
+
+# Test Include URL
+
+==================
+!INCLUDEURL "https://raw.githubusercontent.com/klanec/markdown-pp/master/example/findings/finding.mdpp"
+==================

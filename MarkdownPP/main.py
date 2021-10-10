@@ -16,7 +16,7 @@ import sys
 import logging
 
 from os import path
-from os import mkdir, access, getcwd
+from os import mkdir, access, getcwd, remove
 from os import W_OK, X_OK
 
 from MarkdownPP import Modules
@@ -33,8 +33,9 @@ class colors:
 
 
 # Create help string
-help_str = '\b\nModules:\n '
-for name in Modules.modules:
+help_str = '\b\nModules: (in run order)\n '
+modules = sorted(Modules.modules, key = lambda x: Modules.modules[x]().priority)
+for name in modules:
     m = Modules.modules[name]()
     d = 'enabled |' if m.DEFAULT else '* disabled |'
     r = (colors.RED + 'REMOTE CALLS' + colors.NORMAL) if m.REMOTE else (colors.GREEN + 'local only' + colors.NORMAL)
@@ -50,6 +51,8 @@ for name in Modules.modules:
 @click.option('--log', '-l', help='Enable debug, warn and error logging', is_flag=True)                # Not yet implemented
 @click.argument('input', type=click.File(mode='r'))
 def cli(output, collect, include, exclude, all_modules, log, input):
+
+    PROJECT_DIR.COLLECT = collect
 
     # Save the input file path 
     PROJECT_DIR.INPUT_FILE = path.abspath(input.name)
@@ -75,7 +78,6 @@ def cli(output, collect, include, exclude, all_modules, log, input):
         modules = [name for name in Modules.modules if Modules.modules[name]().DEFAULT]
     
     # Handle output file / directory
-    PROJECT_DIR.CONVERT_TO_ABSOLUTE_PATHS = not collect # If not collect, convert all embedded images to absolute path
     if output and collect:
         click.echo("Won't output to a file and a directory at the same time. chose either --output or --collect.")
         return -1
@@ -83,7 +85,6 @@ def cli(output, collect, include, exclude, all_modules, log, input):
         # Set output to stdout if no other specified.
         output = sys.stdout
     if collect:
-        PROJECT_DIR.MOVE_FILES_TO_PROJECT_DIR = True
         collection_dir = path.abspath(collect)
         # Make a directory if it doesn't exist
         if not path.exists(collection_dir):

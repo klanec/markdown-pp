@@ -37,7 +37,7 @@ class Comment(Module):
 
     table_of_todo_re = re.compile(r'^!(TABLE_OF_TODOS|TOT)$')
 
-    priority = 1
+    priority = 8
 
     def transform(self, data):
         transforms = []

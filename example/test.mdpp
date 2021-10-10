@@ -12,13 +12,6 @@
 # BROKEN IMAGE
 ![top level embed](/home/klanec/Pictures/klssanec.png)
 
-## two
-
-### three
-
-#### four
-
-##### five
 
 # IMAGES
 !INCLUDE "findings/images.mdpp"
@@ -27,7 +20,7 @@
 !INCLUDECODE "hello.py"
 
 # INCLUDE CODE MAIN ONLY + PYTHON
-!INCLUDECODE "hello.py" (python), 3:4
+!INCLUDECODE "pocs/poc.py" (python), 3:4
 
 
 !FRONTMATTER this, table(lol)

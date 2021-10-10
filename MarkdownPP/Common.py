@@ -1,7 +1,30 @@
 from os import path, mkdir
 from shutil import copyfile
-import logging
-logging.basicConfig(filename='debug.log', level=logging.DEBUG)
+import re
+
+
+# SHARED REGULAR EXPRESSIONS
+# ===
+# Detects yaml frontmatter between `---` delimiters at the start of a Markdown file
+frontmatter_regex = re.compile(r"\A---(.*?)---\s*(.*?)\s*\Z", flags=re.DOTALL | re.MULTILINE)
+
+# Detects usage of "!FRONTMATTER this"
+frontmatter_this_regex = re.compile(r'!FRONTMATTER\s+this,')
+
+# Detects !INCLUDECODE for various modules
+include_code_regex = re.compile(r"^!INCLUDECODE\s+(?:\"([^\"]+)\"|'([^']+)')"
+                    r"(?:\s*\(\s*(.*)\s*\)\s*)?"
+                    r"\s*(?:,\s*(\d+|(\d*:\d*)))?\s*$")
+
+# matches images embedded with <img> or ![]() methods
+embedded_image_regex = re.compile(r'^(<img |\[?!\[[\w\s=-]*?\]).*?(src=\"|\()([\w\/.-]+?)([\" #\)?])(.*)\s*?$') #^(<img |\[?!\[[\w\s=-]*?\]).*?(src="|\()([\w\/.-]+?)([" #\)?])(.*)$')
+# Link to image in match.group(3)
+
+# matches title lines in Markdown files
+md_title_regex = re.compile(r"^(:?#+.*|={3,}|-{3,})$")
+# ===
+
+all_frontmatter = {}
 
 class PROJECT_DIR:
 
@@ -10,23 +33,30 @@ class PROJECT_DIR:
     FRONTMATTER_FILE = None
     LOG = None
     LOG_FILE = False
-    CONVERT_TO_ABSOLUTE_PATHS = False
-    MOVE_FILES_TO_PROJECT_DIR = False
+    COLLECT = False
     INPUT_FILE = ''
     COPIED_FILES = {}
 
 
 
-def process_path(md_file, img_file_path):
+def process_path(md_file, file_to_embed, get_abs=True):
     '''
     Takes the path of a markdown file and the image file path embedded in it. 
     Returns either the absolute path to the file or copies the file to the project dir and returns the path relative to the output markdwon report.
 
     relies on path.join(A, B) returning B if both A and B are absolute paths.
+
+    parameters:
+        md_file (str): the file containing this embed (absolute path)
+        file_to_embed (str): the path to the file being embedded
+        get_abs (bool): Returns an absolute path on true, copies to project dir and returns new relative path on False
+    
+    returns:
+        processed path to file
     '''
     dir = path.dirname(md_file)
-    filename = path.basename(img_file_path)
-    old_abs_path = path.abspath(path.join(dir, img_file_path))
+    filename = path.basename(file_to_embed)
+    old_abs_path = path.abspath(path.join(dir, file_to_embed))
 
     if not path.isfile(old_abs_path):
         return 'Process_path ERROR: Embedded file not found.'
@@ -35,10 +65,9 @@ def process_path(md_file, img_file_path):
     RED = '\033[91m'
     GREEN = '\033[32;49;22m'
 
-    if PROJECT_DIR.CONVERT_TO_ABSOLUTE_PATHS:
+    if get_abs:
         return old_abs_path
-
-    elif PROJECT_DIR.MOVE_FILES_TO_PROJECT_DIR:  
+    else:  
         # Check if it has been copied before, return if so
         if old_abs_path in PROJECT_DIR.COPIED_FILES.keys():
             return PROJECT_DIR.COPIED_FILES[old_abs_path]
@@ -60,9 +89,6 @@ def process_path(md_file, img_file_path):
 
         # Return the new relative path
         return new_rel_path
-
-    else: 
-        return img_file_path
     
 
 def markdown_table(data, first_row_header=False):
@@ -89,3 +115,4 @@ def markdown_table(data, first_row_header=False):
     table = df.to_markdown(index=False, tablefmt="pipe")
 
     return [l+'\n' for l in table.split('\n') if l]
+

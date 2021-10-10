@@ -1,0 +1,17 @@
+
+# No Recursion
+====================================
+!INCLUDEDIR "findings/"
+====================================
+
+
+# With Recursion
+====================================
+!INCLUDEDIR "findings/", RECURSE
+====================================
+
+
+# With Recursion and file types
+====================================
+!INCLUDEDIR "findings/", RECURSE, FORMATS (py, png)
+====================================
