@@ -43,9 +43,17 @@ class Comment(Module):
         transforms = []
         todos = []
         linenum = 0
+        literal = False
+
         for linenum, line in enumerate(data):
             match = self.commentre.search(line)
-            if match:
+
+            if line[:3] == '```':
+                literal = not literal
+                continue
+            elif literal:
+                continue
+            elif match:
                 err_nonce = ''
                 if 'TODO' in match.group(1):
                     err_nonce = token_hex(5)

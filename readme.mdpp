@@ -1,6 +1,16 @@
+---
+id: readme
+animal: dog
+breed: Dalmation
+name: Elvis
+owner:
+- Alice
+- Bob
+---
 !TOT
 
 !TOE
+
 
 Markdown Preprocessor (MarkdownPP)
 ==================================
@@ -44,6 +54,14 @@ Modules
 --------
 
 ### Includes
+
+Tag:
+`!INCLUDE "path/to/file.md"`
+
+Alternate Forms:
+`!INCLUDE "file.md", LEVEL 3`
+`!INCLUDE "file.md", 3` "LEVEL" string is optional
+`!INCLUDE "$path/to/many/*.md"`
 
 In order to facilitate large documentation projects, MarkdownPP has an Include
 module that will replace a line of the form `!INCLUDE "path/to/filename"` with
@@ -89,11 +107,33 @@ parameter will yield:
     ### Foo
     #### Bar
 
-Finally, the Include module will also handle embedded images such that the
+The Include module will also handle embedded images such that the
 output file has valid links regardless of where they were relative to the 
 input file.
 
+!TODO "example of the above"
+
+Finally, the include module allows for specifying files with unix style 
+pattern expansion. Imagine the following directory structure:
+
+```
+files/
+├── a.md
+├── b.md
+└── c.md
+```
+
+All files can be included in a single statement as below:
+
+```
+!INCLUDE "files/*.md"
+```
+
+
 ### IncludeURLs
+
+Tag:
+`!INCLUDEURL "$url"`
 
 Since this module makes external calls, it is disabled by default. Include it 
 explicitly with `-i`/`--incude` or by running all modules with `-a`/`--all`
@@ -127,6 +167,12 @@ Compiling `index.mdpp` with the IncludeURL module will produce the following:
     Remote World!
 
 ### IncludeCode
+
+Tag:
+`!INCLUDECODE "poc.py"`
+
+Alternate forms:
+`!INCLUDECODE "hello.py" (python), 1:2` Set the syntax highlighting to python and grab only lines 1 to 2
 
 Facilitates the inclusion of local code files. GFM fences will be added
 around the included code.
@@ -184,7 +230,57 @@ Compiling `index.mdpp` with IncludeCode module will produce the following:
     Easy as that!
 
 
+### Include Directory
+
+Tag:
+`!INCLUDEDIR "$directory"`
+
+Alternate Forms:
+`!INCLUDEDIR "$directory", RECURSE`
+`!INCLUDEDIR "$directory", FORMATS ($ext1, $ext2 ...)`  RECURSE can be added here but must come before FORMATS
+
+This feature allows for including all files in a given directory, allowing you to filter based on file
+extension and recurse into subdirectories. It supports including markdown files, embedding images and
+including code.
+
+Given directory structure:
+```
+files/
+├── directory
+│   ├── subfile1.md
+│   └── subfile2.md
+├── file1.md
+├── file2.md
+└── image1.png
+```
+
+You can include all files in the top directory like so:
+```
+!INCLUDEDIR "files/"
+```
+
+This will result in the following block:
+```
+!INCLUDE "/home/klanec/Documents/code/markdown-pp/example/TEST/files/file1.md"
+
+!INCLUDE "/home/klanec/Documents/code/markdown-pp/example/TEST/files/file2.md"
+
+![image1](/home/klanec/Documents/code/markdown-pp/example/TEST/files/image1.png)
+```
+
+You can recurse in to subdirectories as follows:
+`!INCLUDEDIR "files/", RECURSE`
+
+
 ### Table of Contents
+
+Tag:
+`!TABLE_OF_CONTENTS`
+`!TOC` (Shorthand)
+
+Alternate forms:
+`!TABLE_OF_CONTENTS, LEVEL 3` Only process up to header level 3
+`!TABLE_OF_CONTENTS, 3` "LEVEL" string is optional
 
 The biggest feature provided by MarkdownPP is the generation of a table of
 contents for a document, with each item linked to the appropriate section of the
@@ -202,20 +298,41 @@ Usage:
 
 ### Frontmatter
 
+Tag:
+`FRONTMATTER selector, data_structure(column1, column2, column3)`
+
+Alternate Form:
+`FRONTMATTER selector, data_structure(column1, column2, column3), SORT column1 ascending`
+
+
 !TODO "make this description more comprehensible"
 
 In the Include module, yaml frontmatter is parsed at the start of any markdown file included with the Include
-module. This module allows you to then arrange that collected data in a variety of useful ways.
+module. The !FRONTMATTER tag allows for arranging that collected data in a variety of useful ways.
 
-The syntax is:
 
-`!FRONTMATTER selector, data_structure(data1, data2, data3)`
+Given frontmatter
 
-where `selector` refers to WHAT data you want. 
+```
+---
+id: readme
+animal: dog
+breed: Dalmation
+name: Elvis
+owner:
+- Alice
+- Bob
+---
+```
+
+The tag:
 
 `!FRONTMATTER animal.dog, table(name, breed, owner)`
 
-`!FRONTMATTER id.finding34, list(references)`
+will generate the following table:
+!TODO "fix frontmatter module to save frontmatter from toplevel too"
+
+!FRONTMATTER animal.dog, table(name, breed, owner)
 
 **Supported shorthand selectors**
 - this (shorthand for the current file. The file's `id` tag will be dropped in its place)
@@ -225,6 +342,9 @@ where `selector` refers to WHAT data you want.
 - plain (output as string)
 - list
 - table
+
+**Supported sorting strings**
+!TODO "Finish this"
 
 ### Comment
 
@@ -274,12 +394,11 @@ in your text editor. Adding a tag that will fail will demonstrate this:
 
 The oputput is:
 
-!FRONTMATTER all, shaolin_shadow_boxing(wutang, sword, stlye)
+!FRONTMATTER all, shaolin(shadow, boxing)
 
 And the table of errors:
 
 !TOE
-
 
 ### Reference
 

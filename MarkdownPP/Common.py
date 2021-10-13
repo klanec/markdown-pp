@@ -24,6 +24,7 @@ embedded_image_regex = re.compile(r'^(<img |\[?!\[[\w\s=-]*?\]).*?(src=\"|\()([\
 md_title_regex = re.compile(r"^(:?#+.*|={3,}|-{3,})$")
 # ===
 
+# This should be wrapped in a class
 all_frontmatter = {}
 
 class PROJECT_DIR:

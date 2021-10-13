@@ -32,12 +32,17 @@ class IncludeCode(Module):
 
     def transform(self, data):
         transforms = []
+        literal = False
 
-        linenum = 0
-        for line in data:
+        for linenum, line in enumerate(data):
             match = include_code_regex.search(line)
-
-            if match:
+          
+            if line[:3] == '```':
+                literal = not literal
+                continue
+            elif literal:
+                continue
+            elif match:
                 include_code_data = self.include_code(match)
                 transform = Transform(linenum=linenum, oper="swap", data=include_code_data)
                 transforms.append(transform)

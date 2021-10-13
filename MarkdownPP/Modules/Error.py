@@ -24,12 +24,19 @@ class Error(Module):
 
     def transform(self, data):
         transforms = []
-
         errors = []
+        literal = False
         for linenum, line in enumerate(data):
             # If !ERROR tag found, format and output
             err_match = self.error_re.search(line)
-            if err_match:
+
+
+            if line[:3] == '```':
+                literal = not literal
+                continue
+            elif literal:
+                continue
+            elif err_match:
                 error = err_match.group(1).strip()
                 err = err_match.group(2).strip()
 
@@ -42,10 +49,20 @@ class Error(Module):
                                         data=comment)
                 transforms.append(transform)
         
+        #print('searching for table of errors...')
+        
+        literal = False
         for linenum, line in enumerate(data):
             # If !TABLE_OF_ERRORS tag found, format and output
             toe_match = self.table_of_errors_re.search(line)
-            if toe_match:
+
+            if line[:3] == '```':
+                literal = not literal
+                continue
+            elif literal:
+                continue
+            elif toe_match:
+                #print(linenum, line.strip(), 'FOUND')
                 errors_hdr = [('Search Me', 'Error Tag', 'Error Cause')] + errors
                 table = markdown_table(errors_hdr, first_row_header=True)
                 

@@ -8,12 +8,8 @@ from __future__ import unicode_literals
 import re
 from contextlib import closing
 
-try:
-    from http.client import HTTPConnection
-    from urllib.parse import urlencode
-except ImportError:
-    from httplib import HTTPConnection
-    from urllib import urlencode
+from http.client import HTTPConnection
+from urllib.parse import urlencode
 
 from MarkdownPP.Module import Module
 from MarkdownPP.Transform import Transform
@@ -40,12 +36,11 @@ class LaTeXRender(Module):
 
     def transform(self, data):
         transforms = []
-        linenum = 0
         in_block = False
         current_block = ""
         in_fenced_code_block = False
 
-        for line in data:
+        for linenum, line in enumerate(data):
             # Handling fenced code blocks (for Github-flavored markdown)
             if fencedcodere.search(line):
                 if in_fenced_code_block:

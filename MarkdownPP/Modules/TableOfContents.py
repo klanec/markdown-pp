@@ -10,7 +10,7 @@ import re
 from MarkdownPP.Module import Module
 from MarkdownPP.Transform import Transform
 
-tocre = re.compile(r"^!(TOC|TABLE_OF_CONTENTS)\s?(level\s?)?([1-6])?\s*?$") 
+tocre = re.compile(r"^!(TOC|TABLE_OF_CONTENTS),?\s?(LEVEL\s?)?([1-6])?\s*?$") 
 # Match group 1 contains the tag (TOC), group2 contains string 'level' (optional), group 3 is the subheader number
 
 atxre = re.compile(r"^(#+)\s*(.+)$")
@@ -67,7 +67,7 @@ class TableOfContents(Module):
         # iterate through the document looking for markers and headers
         linenum = 0
         lastline = ''
-        for line in data:
+        for linenum, line in enumerate(data):
 
             # Fenced code blocks (Github-flavored markdown)
             match = fencedcodere.search(line)

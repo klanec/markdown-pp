@@ -45,15 +45,44 @@ class Include(Module):
     def transform(self, data):
         transforms = []
 
-        linenum = 0
-        for line in data:
+        # Top level YAML Frontmatter is detected, parsed and stored in memory
+        frontmatter = ''
+        match = frontmatter_regex.match(''.join(data))
+        if match:
+            frontmatter, _ = match.groups()         # get yaml frontmatter as string
+          
+            # Drop all frontmatter lines
+            for linenum in range(len(frontmatter.split('\n'))):
+                transform = Transform(linenum=linenum, oper="drop")
+                transforms.append(transform)
+
+            frontmatter = yaml.safe_load(frontmatter)   # get yaml frontmatter as dictionary from string
+            if isinstance(frontmatter, list) or isinstance(frontmatter, dict):
+                all_frontmatter[PROJECT_DIR.INPUT_FILE] = frontmatter
+            
+            # Sneakily substitute "!FRONTMATTER this," to "!FRONTMATTER id.id,"
+            this_id = f"id.{frontmatter.get('id', 'UNDEF')}"
+            for linenum, line in enumerate(data):
+                match = frontmatter_this_regex.search(line)
+                if match:
+                    transform = Transform(linenum=linenum, oper='swap', data=frontmatter_this_regex.sub(f"!FRONTMATTER {this_id},", line))
+                    transforms.append(transform)
+    
+        # Don't process include tags in ``` code fences`
+        literal = False
+
+        for linenum, line in enumerate(data):
             match = self.includere.search(line)
             image_match = embedded_image_regex.search(line)
 
-            if match:
+            if line[:3] == '```':
+                literal = not literal
+                continue
+            elif literal:
+                continue
+            elif match:
                 includedata = self.include(match)
-                transform = Transform(linenum=linenum, oper="swap",
-                                       data=includedata)
+                transform = Transform(linenum=linenum, oper="swap", data=includedata)
                 transforms.append(transform)
             elif image_match:
                 # Handle images linked to in the top level file (not in included files)
@@ -63,13 +92,32 @@ class Include(Module):
                     new_embed = f'!ERROR "{line.rstrip()}" <!-- !ERROR: {replace_path.split(":")[-1]} -->'
                 else:
                     new_embed = line.replace(embed_img, replace_path)
-
-                print('\n\nTOPLEVEL IMG:\n', embed_img, '\n', replace_path)
                 transform = Transform(linenum=linenum, oper="swap", data=[new_embed])
                 transforms.append(transform)
-            
-            linenum += 1
         return transforms
+    
+
+    def include(self, match, pwd=""):
+        # file name is caught in group 1 if it's written with double quotes,
+        # or group 2 if written with single quotes
+        fileglob = match.group(1) or match.group(2)
+
+        shift = int(match.group(3) or 0)
+
+        result = []
+        if pwd != "":
+            fileglob = path.join(pwd, fileglob)
+
+        files = sorted(glob.glob(fileglob))
+
+        if len(files) > 0:
+            for filename in files:
+                result += self.include_file(filename, pwd, shift)
+        else:
+            result.append( f'!ERROR "{match.string.rstrip()}" <!-- !ERROR: File not found or glob pattern not recognised -->\n' ) #RET
+
+        return result
+
 
     def include_file(self, filename, pwd="", shift=0):
         try:
@@ -89,13 +137,13 @@ class Include(Module):
                 # Sneakily substitute "!FRONTMATTER this," to "!FRONTMATTER id.id,"
                 this_id = f"id.{frontmatter.get('id', 'UNDEF')}"
                 data = frontmatter_this_regex.sub(f"!FRONTMATTER {this_id},", data)
-
                 data = [line+'\n' for line in data.split('\n')]
 
             # line by line, apply shift and recursively include file data
             linenum = 0
             includednum = 0
 
+            # Can't use enumerate in this case because we are changing the list as we iterate... 
             for line in data:
                 include_match = self.includere.search(line)
                 image_match = embedded_image_regex.search(line)
@@ -158,27 +206,8 @@ class Include(Module):
             return data
 
         except (IOError, OSError) as exc:
-            print(exc)
+            return [ f'!ERROR "!INCLUDE "{filename.rstrip()}"" <!-- !ERROR:  Requested data structure not recognized -->\n' ]
+        except Exception as exc:
+            return [f'!ERROR "!INCLUDE "{filename.rstrip()}"" <!-- !ERROR: {exc} -->\n']
 
-        return []
-
-    def include(self, match, pwd=""):
-        # file name is caught in group 1 if it's written with double quotes,
-        # or group 2 if written with single quotes
-        fileglob = match.group(1) or match.group(2)
-
-        shift = int(match.group(3) or 0)
-
-        result = []
-        if pwd != "":
-            fileglob = path.join(pwd, fileglob)
-
-        files = sorted(glob.glob(fileglob))
-
-        if len(files) > 0:
-            for filename in files:
-                result += self.include_file(filename, pwd, shift)
-        else:
-            result.append("")
-
-        return result
+        

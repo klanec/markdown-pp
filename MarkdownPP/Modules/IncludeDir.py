@@ -33,21 +33,34 @@ class IncludeDir(Module):
     def transform(self, data):
         transforms = []
 
-        linenum = 0
-        for line in data:
-            match = self.includedir_re.search(line)
+        literal = False
 
-            if match:
+        for linenum, line in enumerate(data):
+            match = self.includedir_re.search(line)
+            
+            if line[:3] == '```':
+                literal = not literal
+                continue
+            elif literal:
+                continue
+            elif match:
                 include_dir = path.abspath(match.group(1))
                 recurse = 'RECURSE' in match.group(0)
 
                 # Get a list of all subfiles in specified folder
-                if recurse:
-                    subfiles_by_dir = [[path.join(root, file) for file in files] for root, dirs, files in walk(include_dir)]
-                    subfiles = [file for directory in subfiles_by_dir for file in directory]
-                else:
-                    subfiles = [path.join(path.abspath(include_dir), file) for file in listdir(include_dir)]
-                    subfiles = [file for file in subfiles if path.isfile(file)]
+                try:
+                    if recurse:
+                        subfiles_by_dir = [sorted([path.join(root, file) for file in files]) for root, dirs, files in walk(include_dir)]
+                        subfiles = [file for directory in subfiles_by_dir for file in directory]
+                        # print(subfiles_by_dir, '\n\n', subfiles) REMME
+                    else:
+                        subfiles = sorted([path.join(path.abspath(include_dir), file) for file in listdir(include_dir)])
+                        subfiles = [file for file in subfiles if path.isfile(file)]
+                except FileNotFoundError:
+                    error = [f'!ERROR "{match.string.rstrip()}" <!-- !ERROR: Included directory not found -->\n']
+                    transform = Transform(linenum=linenum, oper="swap", data=error)
+                    transforms.append(transform)
+                    continue
 
                 images = ['.png','.apng', '.avif', '.gif', '.jpeg', '.jpg', '.svg', '.webp', '.bmp']
                 md = ['.md', '.mdpp', '.txt']
@@ -55,6 +68,7 @@ class IncludeDir(Module):
                 file_types = []
                 if match.group(3):
                     file_types = ['.'+x.strip() for x in match.group(3).split(',')]
+                    #print('FORMATS:', file_types) REMME
 
                 data = []
                 for file in subfiles:

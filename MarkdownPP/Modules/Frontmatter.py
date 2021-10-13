@@ -31,7 +31,7 @@ class Frontmatter(Module):
     REMOTE = False
     
     column_regex = re.compile(f"([^,\(\)\s]+)") # Gets list of matches for "(a, b, c)"
-    fonrtmatter_regex = re.compile(r"^!FRONTMATTER\s+([^,]+), *([\w.-]{1,32}\(.*?\)),? *(sort ([\w.-]+)\s(ascending|asc|descending|desc))?\s?$", flags=re.MULTILINE)
+    frontmatter_regex = re.compile(r"^!FRONTMATTER\s+([^,]+), *([\w.-]{1,32}\(.*?\)),? *(SORT ([\w.-]+)\s(ascending|asc|descending|desc))?\s?$", flags=re.MULTILINE)
     
     frontmatter = all_frontmatter
 
@@ -42,11 +42,19 @@ class Frontmatter(Module):
 
     def transform(self, data):
         logging.debug('running tansform()')
+
         transforms = []
-        linenum = 0
-        for line in data: # Go line by line through the mdpp file
-            match = self.fonrtmatter_regex.search(line) # Find the Frontmatter tags
-            if match:
+        literal = False
+
+        for linenum, line in enumerate(data): # Go line by line through the mdpp file
+            match = self.frontmatter_regex.search(line) # Find the Frontmatter tags
+            
+            if line[:3] == '```':
+                literal = not literal
+                continue
+            elif literal:
+                continue
+            elif match:
                 logging.debug(f'transform() -> !FRONTMATTER tag found: {str(linenum)}:{match.string.rstrip()}')
                 
                 frontmatterdata = self.process_frontmatter(match) # Process frontmatter tag to get markdown
@@ -56,7 +64,6 @@ class Frontmatter(Module):
 
                 transforms.append(transform)
 
-            linenum += 1
 
 
         return transforms

@@ -28,15 +28,20 @@ class Reference(Module):
         reffound = False
         reflines = []
         refdata = ""
+        literal = False
 
         links = []
 
         # iterate through the document looking for !REF markers and links
-        linenum = 0
-        for line in data:
+        for linenum, line in enumerate(data):
 
             match = refre.search(line)
-            if match:
+            if line[:3] == '```':
+                literal = not literal
+                continue
+            elif literal:
+                continue
+            elif match:
                 reffound = True
                 reflines.append(linenum)
 

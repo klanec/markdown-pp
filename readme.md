@@ -1,4 +1,22 @@
 
+**Table of TODOs**
+| Search Me   | TO DO                                                        |
+|:------------|:-------------------------------------------------------------|
+| b07709557c  | Explain command line arguments                               |
+| 7d5101558e  | example of the above                                         |
+| b2f027f9d7  | make this description more comprehensible                    |
+| 1888733757  | fix frontmatter module to save frontmatter from toplevel too |
+| 38c424a37b  | Finish this                                                  |
+| f3ae6e5d3d  | This is a default Red TODO tag                               |
+| f56074801d  | This is a pretty Purple TODO tag                             |
+
+
+**Table of Errors**
+| Search Me   | Error Tag                                 | Error Cause                             |
+|:------------|:------------------------------------------|:----------------------------------------|
+| cb8b7db7b1  | !FRONTMATTER all, shaolin(shadow, boxing) | Requested data structure not recognized |
+
+
 Markdown Preprocessor (MarkdownPP)
 ==================================
 
@@ -19,62 +37,36 @@ As an example, this document in raw format is named "readme.mdpp", and the
 generated document from MarkdownPP is named "readme.md" so that GitHub can find
 and process that document when viewing the repository.
 
-[![Build Status](https://travis-ci.org/jreese/markdown-pp.svg?branch=master)](https://travis-ci.org/jreese/markdown-pp)
+!TABLE_OF_CONTENTS level 3
 
-1\.  [Installation and Usage](#installationandusage)  
-2\.  [Modules](#modules)  
-2.1\.  [Includes](#includes)  
-2.2\.  [IncludeURLs](#includeurls)  
-2.3\.  [IncludeCode](#includecode)  
-2.4\.  [Table of Contents](#tableofcontents)  
-2.5\.  [Reference](#reference)  
-2.6\.  [LaTeX Rendering](#latexrendering)  
-2.7\.  [YouTube Embeds](#youtubeembeds)  
-3\.  [Examples](#examples)  
-4\.  [Support](#support)  
-5\.  [References](#references)  
-
-<a name="installationandusage"></a>
-
-1\. Installation and Usage
+Installation and Usage
 ----------------------
 
-Currently, you'll need to download the source code from [GitHub][repo] or clone
-the repository, and the run the installation script manually.
+Pull this repository and run `python3 setup.py install`
 
-    pip install MarkdownPP
+Make sure to install the requirements:
 
-There are two components to the project: a Python module, `MarkdownPP`, and a
-Python script that acts as a simple command line interface to the module,
-`markdown-pp`.
+- pandas
+- pyyaml
+- tabulate
 
-Assuming you have a file named `foo.mdpp`, you can generate the preprocessed
-file `foo.md` by running the following command:
+Arguments
+---------
 
-    $ markdown-pp foo.mdpp -o foo.md
+<span style="color:OrangeRed">TODO: Explain command line arguments (b07709557c)</span>
 
-If you do not specify an output file name, the results will be printed to
-stdout, enabling them to be piped to another command.
-
-By default, all available modules are enabled. You can specify a list of
-modules to exclude:
-
-    $ markdown-pp foo.mdpp -o foo.md -e latexrender,youtubembed
-
-To see usage instructions, including a list of enabled modules, supply the
--h or --help arguments:
-
-    $ markdown-pp --help
-
-
-<a name="modules"></a>
-
-2\. Modules
+Modules
 --------
 
-<a name="includes"></a>
+### Includes
 
-### 2.1\. Includes
+Tag:
+`!INCLUDE "path/to/file.md"`
+
+Alternate Forms:
+`!INCLUDE "file.md", LEVEL 3`
+`!INCLUDE "file.md", 3` "LEVEL" string is optional
+`!INCLUDE "$path/to/many/*.md"`
 
 In order to facilitate large documentation projects, MarkdownPP has an Include
 module that will replace a line of the form `!INCLUDE "path/to/filename"` with
@@ -120,9 +112,36 @@ parameter will yield:
     ### Foo
     #### Bar
 
-<a name="includeurls"></a>
+The Include module will also handle embedded images such that the
+output file has valid links regardless of where they were relative to the 
+input file.
 
-### 2.2\. IncludeURLs
+<span style="color:OrangeRed">TODO: example of the above (7d5101558e)</span>
+
+Finally, the include module allows for specifying files with unix style 
+pattern expansion. Imagine the following directory structure:
+
+```
+files/
+├── a.md
+├── b.md
+└── c.md
+```
+
+All files can be included in a single statement as below:
+
+```
+!INCLUDE "files/*.md"
+```
+
+
+### IncludeURLs
+
+Tag:
+`!INCLUDEURL "$url"`
+
+Since this module makes external calls, it is disabled by default. Include it 
+explicitly with `-i`/`--incude` or by running all modules with `-a`/`--all`
 
 Facilitates the inclusion of remote files, such as files kept in a subversion
 or GitHub repository. Like Include, the IncludeURL module can replace a line of
@@ -152,9 +171,13 @@ Compiling `index.mdpp` with the IncludeURL module will produce the following:
     Hello
     Remote World!
 
-<a name="includecode"></a>
+### IncludeCode
 
-### 2.3\. IncludeCode
+Tag:
+`!INCLUDECODE "poc.py"`
+
+Alternate forms:
+`!INCLUDECODE "hello.py" (python), 1:2` Set the syntax highlighting to python and grab only lines 1 to 2
 
 Facilitates the inclusion of local code files. GFM fences will be added
 around the included code.
@@ -212,20 +235,193 @@ Compiling `index.mdpp` with IncludeCode module will produce the following:
     Easy as that!
 
 
-<a name="tableofcontents"></a>
+### Include Directory
 
-### 2.4\. Table of Contents
+Tag:
+`!INCLUDEDIR "$directory"`
+
+Alternate Forms:
+`!INCLUDEDIR "$directory", RECURSE`
+`!INCLUDEDIR "$directory", FORMATS ($ext1, $ext2 ...)`  RECURSE can be added here but must come before FORMATS
+
+This feature allows for including all files in a given directory, allowing you to filter based on file
+extension and recurse into subdirectories. It supports including markdown files, embedding images and
+including code.
+
+Given directory structure:
+```
+files/
+├── directory
+│   ├── subfile1.md
+│   └── subfile2.md
+├── file1.md
+├── file2.md
+└── image1.png
+```
+
+You can include all files in the top directory like so:
+```
+!INCLUDEDIR "files/"
+```
+
+This will result in the following block:
+```
+!INCLUDE "/home/klanec/Documents/code/markdown-pp/example/TEST/files/file1.md"
+
+!INCLUDE "/home/klanec/Documents/code/markdown-pp/example/TEST/files/file2.md"
+
+![image1](/home/klanec/Documents/code/markdown-pp/example/TEST/files/image1.png)
+```
+
+You can recurse in to subdirectories as follows:
+`!INCLUDEDIR "files/", RECURSE`
+
+
+### Table of Contents
+
+Tag:
+`!TABLE_OF_CONTENTS`
+`!TOC` (Shorthand)
+
+Alternate forms:
+`!TABLE_OF_CONTENTS, LEVEL 3` Only process up to header level 3
+`!TABLE_OF_CONTENTS, 3` "LEVEL" string is optional
 
 The biggest feature provided by MarkdownPP is the generation of a table of
 contents for a document, with each item linked to the appropriate section of the
 markup.  The table is inserted into the document wherever the preprocessor finds
-`!TOC` at the beginning of a line.  Named `<a>` tags are inserted above each
+`!TOC` or `!TABLE_OF_CONTENTS` at the beginning of a line.  Named `<a>` tags are inserted above each
 Markdown header, and the headings are numbered hierarchically based on the
-heading tag that Markdown would generate.
+heading tag that Markdown would generate. The module also supports specifying the header level to
+include in the output table by adding the number (1 to 6) after the tag. See below:
 
-<a name="reference"></a>
+Usage:
+`!TOC` Generates table of contents up to 6th subheading
+`!TOC 3` Generates table of contents up to 3rd subheading
+`!TOC level 4` Generates table of contents up to 4th subheading ('level' string optional for readability)
+`!TOC` can be substituted with `!TABLE_OF_CONTENTS`
 
-### 2.5\. Reference
+### Frontmatter
+
+Tag:
+`FRONTMATTER selector, data_structure(column1, column2, column3)`
+
+Alternate Form:
+`FRONTMATTER selector, data_structure(column1, column2, column3), SORT column1 ascending`
+
+
+<span style="color:OrangeRed">TODO: make this description more comprehensible (b2f027f9d7)</span>
+
+In the Include module, yaml frontmatter is parsed at the start of any markdown file included with the Include
+module. The !FRONTMATTER tag allows for arranging that collected data in a variety of useful ways.
+
+
+Given frontmatter
+
+```
+---
+id: readme
+animal: dog
+breed: Dalmation
+name: Elvis
+owner:
+- Alice
+- Bob
+---
+```
+
+The tag:
+
+`!FRONTMATTER animal.dog, table(name, breed, owner)`
+
+will generate the following table:
+<span style="color:OrangeRed">TODO: fix frontmatter module to save frontmatter from toplevel too (1888733757)</span>
+
+| name   | breed     | owner                               |
+|:-------|:----------|:------------------------------------|
+| Elvis  | Dalmation | <ul><li>Alice</li><li>Bob</li></ul> |
+
+**Supported shorthand selectors**
+- this (shorthand for the current file. The file's `id` tag will be dropped in its place)
+- all (simply use all frontmatter)
+
+**Supported data structures**
+- plain (output as string)
+- list
+- table
+
+**Supported sorting strings**
+<span style="color:OrangeRed">TODO: Finish this (38c424a37b)</span>
+
+### Comment
+
+This module allows you to add two types of comments to the output file. These will be rendered in colour
+such that they stand out. The 2 comment types as follows:
+
+`!COMMENT "This is a default Blue comment"`
+`!TODO "This is a default Red TODO tag"`
+
+becomes:
+
+<span style="color:DodgerBlue">COMMENT: This is a default Blue comment</span>
+
+<span style="color:OrangeRed">TODO: This is a default Red TODO tag (f3ae6e5d3d)</span>
+
+You can even change the colors (HTML colours are supported)
+
+`!COMMENT "This is a Green comment" Green`
+`!TODO "This is a pretty Purple TODO tag" Purple`
+
+becomes:
+
+<span style="color:Green">COMMENT: This is a Green comment</span>
+
+<span style="color:Purple">TODO: This is a pretty Purple TODO tag (f56074801d)</span>
+
+Another important function of the Comment module is the ability to generate a dynamic table
+of all TODOs in the final output.
+
+simply adding the `!TABLE_OF_TODOS` or `!TOT` for short will give the below:
+
+
+**Table of TODOs**
+| Search Me   | TO DO                                                        |
+|:------------|:-------------------------------------------------------------|
+| b07709557c  | Explain command line arguments                               |
+| 7d5101558e  | example of the above                                         |
+| b2f027f9d7  | make this description more comprehensible                    |
+| 1888733757  | fix frontmatter module to save frontmatter from toplevel too |
+| 38c424a37b  | Finish this                                                  |
+| f3ae6e5d3d  | This is a default Red TODO tag                               |
+| f56074801d  | This is a pretty Purple TODO tag                             |
+
+Searching the `Search Me` token will show the corresponding error.
+
+### Error
+
+The Error module handles formatting `!ERROR` tags, which are placed automatically
+where the preprocessor has failed in some way. This tag does not need to be used
+manually. 
+
+There is however a `!TABLE_OF_ERRORS` module, or `!TOE` for short. This will drop in
+a table will a list of all errors in the document and a hex ID to search for the error
+in your text editor. Adding a tag that will fail will demonstrate this:
+
+`!FRONTMATTER all, shaolin(shadow, boxing)`
+
+The oputput is:
+
+<span style="color:FireBrick" id="cb8b7db7b1">ERROR cb8b7db7b1: !FRONTMATTER all, shaolin(shadow, boxing)</span> <!-- !ERROR:  Requested data structure not recognized -->
+
+And the table of errors:
+
+
+**Table of Errors**
+| Search Me   | Error Tag                                 | Error Cause                             |
+|:------------|:------------------------------------------|:----------------------------------------|
+| cb8b7db7b1  | !FRONTMATTER all, shaolin(shadow, boxing) | Requested data structure not recognized |
+
+### Reference
 
 Similarly, MarkdownPP can generate a list of references that follow Markdown's
 alternate link syntax, eg `[name]: <url> "Title"`.  A list of links will be
@@ -234,9 +430,12 @@ generated reference list follows the same alternate linking method to ensure
 consistency in your document, but the link need not be referenced anywhere in
 the document to be included in the list.
 
-<a name="latexrendering"></a>
+Note, only links in the format `[name]: <url> "Title"` are included in the list.
 
-### 2.6\. LaTeX Rendering
+### LaTeX Rendering
+
+Since this module relies on an external service to generate pngs from LaTeX,
+it is disabled by default. Include it explicitly with `-i`/`--incude` or `-a`/`--all`
 
 Lines and blocks of lines beginning and ending with $ are rendered as LaTeX,
 using [QuickLaTeX](http://www.holoborodko.com/pavel/quicklatex/).
@@ -250,9 +449,10 @@ becomes
 ![\displaystyle \int x^2 = \frac{x^3}{3} + C](http://quicklatex.com/cache3/ea/ql_0f9331171ded7fa9ef38e57fccf74aea_l3.png "\displaystyle \int x^2 = \frac{x^3}{3} + C")
 
 
-<a name="youtubeembeds"></a>
+### YouTube Embeds
 
-### 2.7\. YouTube Embeds
+Since this module makes external calls it is disabled by default. 
+Include it explicitly with `-i`/`--incude` or `-a`/`--all`
 
 As GitHub-flavored Markdown does not allow embed tags, each line of the form
 `!VIDEO "[youtube url]"` is converted into a screenshot that links to the video,
@@ -264,12 +464,10 @@ For example,
 
 becomes
 
-[![Link to Youtube video](images/youtube/7aEYoP5-duY.png)](http://www.youtube.com/watch?v=7aEYoP5-duY)
+!VIDEO "http://www.youtube.com/embed/7aEYoP5-duY"
 
 
-<a name="examples"></a>
-
-3\. Examples
+Examples
 --------
 
 Example file.mdpp:
@@ -306,9 +504,7 @@ The preprocessor would generate the following Markdown-ready document file.md:
 	[github]: http://github.com "GitHub"
 
 
-<a name="support"></a>
-
-4\. Support
+Support
 -------
 
 If you find any problems with MarkdownPP, or have any feature requests, please
@@ -317,9 +513,7 @@ contributions are *always* welcome, and ideas for new modules, or additions to
 existing modules, are also appreciated.
 
 
-<a name="references"></a>
-
-5\. References
+References
 ----------
 
 *	[Markdown Preprocessor on GitHub][repo]

@@ -38,12 +38,16 @@ class IncludeURL(Module):
 
     def transform(self, data):
         transforms = []
-
-        linenum = 0
-        for line in data:
+        literal = False
+        for linenum, line in enumerate(data):
             match = self.includere.search(line)
 
-            if match:
+            if line[:3] == '```':
+                literal = not literal
+                continue
+            elif literal:
+                continue
+            elif match:
                 include_url_data = self.include(match)
                 transform = Transform(linenum=linenum, oper="swap", data=include_url_data)
                 transforms.append(transform)
@@ -53,6 +57,7 @@ class IncludeURL(Module):
 
 
     def include(self, match):
+        # TODO: add shift functionality like in !INCLUDE
         url = match.group(1) or match.group(2)
 
         shift = int(match.group(3) or 0)
@@ -74,7 +79,7 @@ class IncludeURL(Module):
                     frontmatter, data = match.groups()         # get yaml frontmatter as string
                     frontmatter = yaml.safe_load(frontmatter)   # get yaml frontmatter as dictionary from string
                     if isinstance(frontmatter, list) or isinstance(frontmatter, dict):
-                        all_frontmatter[parsed_url] = frontmatter
+                        all_frontmatter[parsed_url.geturl()] = frontmatter
                     
                     # Sneakily substitute "!FRONTMATTER this," to "!FRONTMATTER id.id,"
                     this_id = f"id.{frontmatter.get('id', 'UNDEF')}"

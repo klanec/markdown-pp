@@ -28,6 +28,7 @@ class Processor:
 
     def __init__(self,encoding):
         self.encoding = encoding
+        self.modules = []
     
     def register(self, module):
         """
@@ -51,7 +52,6 @@ class Processor:
         for module in self.modules:
             transforms = module.transform(self.data)
             transforms.sort(key=lambda x: x.linenum, reverse=True)
-
             for transform in transforms:
                 linenum = transform.linenum
 

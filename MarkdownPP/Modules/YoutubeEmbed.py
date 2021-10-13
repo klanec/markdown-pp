@@ -32,9 +32,8 @@ class YoutubeEmbed(Module):
     def transform(self, data):
         transforms = []
         in_fenced_code_block = False
-        linenum = 0
 
-        for line in data:
+        for linenum, line in enumerate(data):
             # Handling fenced code blocks (for Github-flavored markdown)
             if fencedcodere.search(line):
                 if in_fenced_code_block:

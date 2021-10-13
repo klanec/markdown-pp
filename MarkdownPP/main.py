@@ -44,13 +44,13 @@ for name in modules:
 
 @click.command(help=help_str)
 @click.option('--output', '-o', help='Output single file.', type=click.File(mode='w'))
-@click.option('--collect', '-c', help='Output self-contained report and all files to a directory.', type=click.Path(dir_okay=True, file_okay=False)) # Add timestamp by default
+@click.option('--collect', '-c', help='Output self-contained report and all files to a directory.', type=click.Path(dir_okay=True, file_okay=False))
 @click.option('--include', '-i', help='Run only the specified modules (comma separated)', type=str)
 @click.option('--exclude', '-e', help='Run all modules except the specified modules (comma separated)', type=str)
 @click.option('--all-modules', '-a', help='Run all modules', is_flag=True)
-@click.option('--log', '-l', help='Enable debug, warn and error logging', is_flag=True)                # Not yet implemented
+# @click.option('--log', '-l', help='Enable debug, warn and error logging', is_flag=True)                # Not yet implemented
 @click.argument('input', type=click.File(mode='r'))
-def cli(output, collect, include, exclude, all_modules, log, input):
+def cli(output, collect, include, exclude, all_modules, input):
 
     PROJECT_DIR.COLLECT = collect
 
@@ -111,9 +111,7 @@ def cli(output, collect, include, exclude, all_modules, log, input):
         PROJECT_DIR.IMAGES_DIR = path.join(cwd, 'images')
         PROJECT_DIR.FRONTMATTER_FILE = path.join(cwd, 'frontmatter.yaml')
         PROJECT_DIR.LOG_FILE = path.join(cwd, 'debug.log')
-
-
-
+        
     # Run preprocessor
     MarkdownPP.MarkdownPP(input=input, output=output, modules=modules)
 
