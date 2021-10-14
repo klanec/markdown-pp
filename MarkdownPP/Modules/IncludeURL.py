@@ -17,8 +17,7 @@ from MarkdownPP.Transform import Transform
 
 from MarkdownPP.Common import frontmatter_regex
 from MarkdownPP.Common import frontmatter_this_regex
-
-from MarkdownPP.Common import all_frontmatter
+from MarkdownPP.Common import frontmatter_storage
 
 class IncludeURL(Module):
     """
@@ -79,7 +78,7 @@ class IncludeURL(Module):
                     frontmatter, data = match.groups()         # get yaml frontmatter as string
                     frontmatter = yaml.safe_load(frontmatter)   # get yaml frontmatter as dictionary from string
                     if isinstance(frontmatter, list) or isinstance(frontmatter, dict):
-                        all_frontmatter[parsed_url.geturl()] = frontmatter
+                        frontmatter_storage.frontmatter[parsed_url.geturl()] = frontmatter
                     
                     # Sneakily substitute "!FRONTMATTER this," to "!FRONTMATTER id.id,"
                     this_id = f"id.{frontmatter.get('id', 'UNDEF')}"

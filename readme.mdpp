@@ -7,10 +7,11 @@ owner:
 - Alice
 - Bob
 ---
-!TOT
 
-!TOE
+!TABLE_OF_TODOS
 
+
+!TABLE_OF_ERRORS
 
 Markdown Preprocessor (MarkdownPP)
 ==================================
@@ -32,7 +33,7 @@ As an example, this document in raw format is named "readme.mdpp", and the
 generated document from MarkdownPP is named "readme.md" so that GitHub can find
 and process that document when viewing the repository.
 
-!TABLE_OF_CONTENTS level 3
+!TABLE_OF_CONTENTS LEVEL 3
 
 Installation and Usage
 ----------------------
@@ -48,7 +49,49 @@ Make sure to install the requirements:
 Arguments
 ---------
 
-!TODO "Explain command line arguments"
+```
+Usage: mdpp [OPTIONS] INPUT
+
+  Modules: (in run order)
+   
+        includedir |    enabled | local only
+           include |    enabled | local only
+       includecode |    enabled | local only
+        includeurl | * disabled | REMOTE CALLS
+       frontmatter |    enabled | local only
+   tableofcontents |    enabled | local only
+         reference |    enabled | local only
+       latexrender | * disabled | REMOTE CALLS
+      youtubeembed | * disabled | REMOTE CALLS
+           comment |    enabled | local only
+             error |    enabled | local only
+
+Options:
+  -o, --output FILENAME    Output single file.
+  -c, --collect DIRECTORY  Output self-contained report and all files to a
+                           directory.
+  -i, --include TEXT       Run only the specified modules (comma separated)
+  -e, --exclude TEXT       Run all modules except the specified modules (comma
+                           separated)
+  -a, --all-modules        Run all modules
+  --help                   Show this message and exit
+```
+
+`-o` or `--output` 
+specify an output for for your final processed markdown document. The preprocessor should handle normalizing file paths of all embedded files.
+
+
+`-c` or `--collect`
+specify an output directory for your final processed markdown document. The preprocessor will collect all embedded files (images etc) and copy them to this directory, updating all paths to be relative to the newly copied files. This is good for creating a portable folder for sharing with others.
+
+`-i` or `--include`
+Include allows for running only specified modules. These should be separated with a comma. Module order is not affected by input order.
+
+`-e` or `--exclude`
+Exclude allows for running all modules except the input list of modules. Warning, this enables default disabled modules unless specifically input in the list.
+
+`-a` or `--all`
+Simply runs all modules including those disabled by default. Default disabled modules are those which make remote calls to external services.
 
 Modules
 --------
@@ -111,7 +154,7 @@ The Include module will also handle embedded images such that the
 output file has valid links regardless of where they were relative to the 
 input file.
 
-!TODO "example of the above"
+<span style="color:OrangeRed">TODO: example of the above (7d5101558e)</span>
 
 Finally, the include module allows for specifying files with unix style 
 pattern expansion. Imagine the following directory structure:
@@ -293,7 +336,7 @@ include in the output table by adding the number (1 to 6) after the tag. See bel
 Usage:
 `!TOC` Generates table of contents up to 6th subheading
 `!TOC 3` Generates table of contents up to 3rd subheading
-`!TOC level 4` Generates table of contents up to 4th subheading ('level' string optional for readability)
+`!TOC LEVEL 4` Generates table of contents up to 4th subheading ('LEVEL' string optional for readability)
 `!TOC` can be substituted with `!TABLE_OF_CONTENTS`
 
 ### Frontmatter
@@ -305,7 +348,7 @@ Alternate Form:
 `FRONTMATTER selector, data_structure(column1, column2, column3), SORT column1 ascending`
 
 
-!TODO "make this description more comprehensible"
+<span style="color:OrangeRed">TODO: make this description more comprehensible (b2f027f9d7)</span>
 
 In the Include module, yaml frontmatter is parsed at the start of any markdown file included with the Include
 module. The !FRONTMATTER tag allows for arranging that collected data in a variety of useful ways.
@@ -330,7 +373,6 @@ The tag:
 `!FRONTMATTER animal.dog, table(name, breed, owner)`
 
 will generate the following table:
-!TODO "fix frontmatter module to save frontmatter from toplevel too"
 
 !FRONTMATTER animal.dog, table(name, breed, owner)
 
@@ -344,7 +386,8 @@ will generate the following table:
 - table
 
 **Supported sorting strings**
-!TODO "Finish this"
+- asc / ascending
+- desc / descending
 
 ### Comment
 
@@ -376,9 +419,9 @@ of all TODOs in the final output.
 
 simply adding the `!TABLE_OF_TODOS` or `!TOT` for short will give the below:
 
-!TOT
+!TABLE_OF_TODOS
 
-Searching the `Search Me` token will show the corresponding error.
+Searching the `Search Me` token will show the corresponding TODO.
 
 ### Error
 
@@ -398,7 +441,7 @@ The oputput is:
 
 And the table of errors:
 
-!TOE
+!TABLE_OF_ERRORS
 
 ### Reference
 
@@ -495,6 +538,6 @@ existing modules, are also appreciated.
 References
 ----------
 
-!REF
+*	[Markdown Preprocessor on GitHub][repo]
 
 [repo]: http://github.com/jreese/markdown-pp "Markdown Preprocessor on GitHub"

@@ -2,7 +2,7 @@ from MarkdownPP.Module import Module
 from MarkdownPP.Transform import Transform
 
 from MarkdownPP.Common import PROJECT_DIR
-from MarkdownPP.Common import all_frontmatter
+from MarkdownPP.Common import frontmatter_storage
 
 import os
 import yaml
@@ -33,7 +33,7 @@ class Frontmatter(Module):
     column_regex = re.compile(f"([^,\(\)\s]+)") # Gets list of matches for "(a, b, c)"
     frontmatter_regex = re.compile(r"^!FRONTMATTER\s+([^,]+), *([\w.-]{1,32}\(.*?\)),? *(SORT ([\w.-]+)\s(ascending|asc|descending|desc))?\s?$", flags=re.MULTILINE)
     
-    frontmatter = all_frontmatter
+    frontmatter = None
 
     selectors = ['all', 'this']
     structures = ['bullet.list', 'numbered.list', 'table']
@@ -42,6 +42,8 @@ class Frontmatter(Module):
 
     def transform(self, data):
         logging.debug('running tansform()')
+
+        self.frontmatter = frontmatter_storage.frontmatter 
 
         transforms = []
         literal = False
@@ -63,8 +65,6 @@ class Frontmatter(Module):
                                       data=frontmatterdata)
 
                 transforms.append(transform)
-
-
 
         return transforms
 

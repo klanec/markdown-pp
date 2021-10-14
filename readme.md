@@ -1,21 +1,17 @@
 
+
 **Table of TODOs**
-| Search Me   | TO DO                                                        |
-|:------------|:-------------------------------------------------------------|
-| b07709557c  | Explain command line arguments                               |
-| 7d5101558e  | example of the above                                         |
-| b2f027f9d7  | make this description more comprehensible                    |
-| 1888733757  | fix frontmatter module to save frontmatter from toplevel too |
-| 38c424a37b  | Finish this                                                  |
-| f3ae6e5d3d  | This is a default Red TODO tag                               |
-| f56074801d  | This is a pretty Purple TODO tag                             |
+| Search Me   | TO DO                            |
+|:------------|:---------------------------------|
+| 684905d47b  | This is a default Red TODO tag   |
+| 269a049305  | This is a pretty Purple TODO tag |
+
 
 
 **Table of Errors**
 | Search Me   | Error Tag                                 | Error Cause                             |
 |:------------|:------------------------------------------|:----------------------------------------|
-| cb8b7db7b1  | !FRONTMATTER all, shaolin(shadow, boxing) | Requested data structure not recognized |
-
+| c664beb8bc  | !FRONTMATTER all, shaolin(shadow, boxing) | Requested data structure not recognized |
 
 Markdown Preprocessor (MarkdownPP)
 ==================================
@@ -37,9 +33,27 @@ As an example, this document in raw format is named "readme.mdpp", and the
 generated document from MarkdownPP is named "readme.md" so that GitHub can find
 and process that document when viewing the repository.
 
-!TABLE_OF_CONTENTS level 3
+1\.  [Installation and Usage](#installationandusage)  
+2\.  [Arguments](#arguments)  
+3\.  [Modules](#modules)  
+3.1\.  [Includes](#includes)  
+3.2\.  [IncludeURLs](#includeurls)  
+3.3\.  [IncludeCode](#includecode)  
+3.4\.  [Include Directory](#includedirectory)  
+3.5\.  [Table of Contents](#tableofcontents)  
+3.6\.  [Frontmatter](#frontmatter)  
+3.7\.  [Comment](#comment)  
+3.8\.  [Error](#error)  
+3.9\.  [Reference](#reference)  
+3.10\.  [LaTeX Rendering](#latexrendering)  
+3.11\.  [YouTube Embeds](#youtubeembeds)  
+4\.  [Examples](#examples)  
+5\.  [Support](#support)  
+6\.  [References](#references)  
 
-Installation and Usage
+<a name="installationandusage"></a>
+
+1\. Installation and Usage
 ----------------------
 
 Pull this repository and run `python3 setup.py install`
@@ -50,15 +64,63 @@ Make sure to install the requirements:
 - pyyaml
 - tabulate
 
-Arguments
+<a name="arguments"></a>
+
+2\. Arguments
 ---------
 
-<span style="color:OrangeRed">TODO: Explain command line arguments (b07709557c)</span>
+```
+Usage: mdpp [OPTIONS] INPUT
 
-Modules
+  Modules: (in run order)
+   
+        includedir |    enabled | local only
+           include |    enabled | local only
+       includecode |    enabled | local only
+        includeurl | * disabled | REMOTE CALLS
+       frontmatter |    enabled | local only
+   tableofcontents |    enabled | local only
+         reference |    enabled | local only
+       latexrender | * disabled | REMOTE CALLS
+      youtubeembed | * disabled | REMOTE CALLS
+           comment |    enabled | local only
+             error |    enabled | local only
+
+Options:
+  -o, --output FILENAME    Output single file.
+  -c, --collect DIRECTORY  Output self-contained report and all files to a
+                           directory.
+  -i, --include TEXT       Run only the specified modules (comma separated)
+  -e, --exclude TEXT       Run all modules except the specified modules (comma
+                           separated)
+  -a, --all-modules        Run all modules
+  --help                   Show this message and exit
+```
+
+`-o` or `--output` 
+specify an output for for your final processed markdown document. The preprocessor should handle normalizing file paths of all embedded files.
+
+
+`-c` or `--collect`
+specify an output directory for your final processed markdown document. The preprocessor will collect all embedded files (images etc) and copy them to this directory, updating all paths to be relative to the newly copied files. This is good for creating a portable folder for sharing with others.
+
+`-i` or `--include`
+Include allows for running only specified modules. These should be separated with a comma. Module order is not affected by input order.
+
+`-e` or `--exclude`
+Exclude allows for running all modules except the input list of modules. Warning, this enables default disabled modules unless specifically input in the list.
+
+`-a` or `--all`
+Simply runs all modules including those disabled by default. Default disabled modules are those which make remote calls to external services.
+
+<a name="modules"></a>
+
+3\. Modules
 --------
 
-### Includes
+<a name="includes"></a>
+
+### 3.1\. Includes
 
 Tag:
 `!INCLUDE "path/to/file.md"`
@@ -135,7 +197,9 @@ All files can be included in a single statement as below:
 ```
 
 
-### IncludeURLs
+<a name="includeurls"></a>
+
+### 3.2\. IncludeURLs
 
 Tag:
 `!INCLUDEURL "$url"`
@@ -171,7 +235,9 @@ Compiling `index.mdpp` with the IncludeURL module will produce the following:
     Hello
     Remote World!
 
-### IncludeCode
+<a name="includecode"></a>
+
+### 3.3\. IncludeCode
 
 Tag:
 `!INCLUDECODE "poc.py"`
@@ -235,7 +301,9 @@ Compiling `index.mdpp` with IncludeCode module will produce the following:
     Easy as that!
 
 
-### Include Directory
+<a name="includedirectory"></a>
+
+### 3.4\. Include Directory
 
 Tag:
 `!INCLUDEDIR "$directory"`
@@ -277,7 +345,9 @@ You can recurse in to subdirectories as follows:
 `!INCLUDEDIR "files/", RECURSE`
 
 
-### Table of Contents
+<a name="tableofcontents"></a>
+
+### 3.5\. Table of Contents
 
 Tag:
 `!TABLE_OF_CONTENTS`
@@ -298,10 +368,12 @@ include in the output table by adding the number (1 to 6) after the tag. See bel
 Usage:
 `!TOC` Generates table of contents up to 6th subheading
 `!TOC 3` Generates table of contents up to 3rd subheading
-`!TOC level 4` Generates table of contents up to 4th subheading ('level' string optional for readability)
+`!TOC LEVEL 4` Generates table of contents up to 4th subheading ('LEVEL' string optional for readability)
 `!TOC` can be substituted with `!TABLE_OF_CONTENTS`
 
-### Frontmatter
+<a name="frontmatter"></a>
+
+### 3.6\. Frontmatter
 
 Tag:
 `FRONTMATTER selector, data_structure(column1, column2, column3)`
@@ -335,7 +407,6 @@ The tag:
 `!FRONTMATTER animal.dog, table(name, breed, owner)`
 
 will generate the following table:
-<span style="color:OrangeRed">TODO: fix frontmatter module to save frontmatter from toplevel too (1888733757)</span>
 
 | name   | breed     | owner                               |
 |:-------|:----------|:------------------------------------|
@@ -351,9 +422,12 @@ will generate the following table:
 - table
 
 **Supported sorting strings**
-<span style="color:OrangeRed">TODO: Finish this (38c424a37b)</span>
+- asc / ascending
+- desc / descending
 
-### Comment
+<a name="comment"></a>
+
+### 3.7\. Comment
 
 This module allows you to add two types of comments to the output file. These will be rendered in colour
 such that they stand out. The 2 comment types as follows:
@@ -365,7 +439,7 @@ becomes:
 
 <span style="color:DodgerBlue">COMMENT: This is a default Blue comment</span>
 
-<span style="color:OrangeRed">TODO: This is a default Red TODO tag (f3ae6e5d3d)</span>
+<span style="color:OrangeRed">TODO: This is a default Red TODO tag (684905d47b)</span>
 
 You can even change the colors (HTML colours are supported)
 
@@ -376,7 +450,7 @@ becomes:
 
 <span style="color:Green">COMMENT: This is a Green comment</span>
 
-<span style="color:Purple">TODO: This is a pretty Purple TODO tag (f56074801d)</span>
+<span style="color:Purple">TODO: This is a pretty Purple TODO tag (269a049305)</span>
 
 Another important function of the Comment module is the ability to generate a dynamic table
 of all TODOs in the final output.
@@ -385,19 +459,16 @@ simply adding the `!TABLE_OF_TODOS` or `!TOT` for short will give the below:
 
 
 **Table of TODOs**
-| Search Me   | TO DO                                                        |
-|:------------|:-------------------------------------------------------------|
-| b07709557c  | Explain command line arguments                               |
-| 7d5101558e  | example of the above                                         |
-| b2f027f9d7  | make this description more comprehensible                    |
-| 1888733757  | fix frontmatter module to save frontmatter from toplevel too |
-| 38c424a37b  | Finish this                                                  |
-| f3ae6e5d3d  | This is a default Red TODO tag                               |
-| f56074801d  | This is a pretty Purple TODO tag                             |
+| Search Me   | TO DO                            |
+|:------------|:---------------------------------|
+| 684905d47b  | This is a default Red TODO tag   |
+| 269a049305  | This is a pretty Purple TODO tag |
 
-Searching the `Search Me` token will show the corresponding error.
+Searching the `Search Me` token will show the corresponding TODO.
 
-### Error
+<a name="error"></a>
+
+### 3.8\. Error
 
 The Error module handles formatting `!ERROR` tags, which are placed automatically
 where the preprocessor has failed in some way. This tag does not need to be used
@@ -411,7 +482,7 @@ in your text editor. Adding a tag that will fail will demonstrate this:
 
 The oputput is:
 
-<span style="color:FireBrick" id="cb8b7db7b1">ERROR cb8b7db7b1: !FRONTMATTER all, shaolin(shadow, boxing)</span> <!-- !ERROR:  Requested data structure not recognized -->
+<span style="color:FireBrick" id="c664beb8bc">ERROR c664beb8bc: !FRONTMATTER all, shaolin(shadow, boxing)</span> <!-- !ERROR:  Requested data structure not recognized -->
 
 And the table of errors:
 
@@ -419,9 +490,11 @@ And the table of errors:
 **Table of Errors**
 | Search Me   | Error Tag                                 | Error Cause                             |
 |:------------|:------------------------------------------|:----------------------------------------|
-| cb8b7db7b1  | !FRONTMATTER all, shaolin(shadow, boxing) | Requested data structure not recognized |
+| c664beb8bc  | !FRONTMATTER all, shaolin(shadow, boxing) | Requested data structure not recognized |
 
-### Reference
+<a name="reference"></a>
+
+### 3.9\. Reference
 
 Similarly, MarkdownPP can generate a list of references that follow Markdown's
 alternate link syntax, eg `[name]: <url> "Title"`.  A list of links will be
@@ -432,7 +505,9 @@ the document to be included in the list.
 
 Note, only links in the format `[name]: <url> "Title"` are included in the list.
 
-### LaTeX Rendering
+<a name="latexrendering"></a>
+
+### 3.10\. LaTeX Rendering
 
 Since this module relies on an external service to generate pngs from LaTeX,
 it is disabled by default. Include it explicitly with `-i`/`--incude` or `-a`/`--all`
@@ -449,7 +524,9 @@ becomes
 ![\displaystyle \int x^2 = \frac{x^3}{3} + C](http://quicklatex.com/cache3/ea/ql_0f9331171ded7fa9ef38e57fccf74aea_l3.png "\displaystyle \int x^2 = \frac{x^3}{3} + C")
 
 
-### YouTube Embeds
+<a name="youtubeembeds"></a>
+
+### 3.11\. YouTube Embeds
 
 Since this module makes external calls it is disabled by default. 
 Include it explicitly with `-i`/`--incude` or `-a`/`--all`
@@ -467,7 +544,9 @@ becomes
 !VIDEO "http://www.youtube.com/embed/7aEYoP5-duY"
 
 
-Examples
+<a name="examples"></a>
+
+4\. Examples
 --------
 
 Example file.mdpp:
@@ -504,7 +583,9 @@ The preprocessor would generate the following Markdown-ready document file.md:
 	[github]: http://github.com "GitHub"
 
 
-Support
+<a name="support"></a>
+
+5\. Support
 -------
 
 If you find any problems with MarkdownPP, or have any feature requests, please
@@ -513,7 +594,9 @@ contributions are *always* welcome, and ideas for new modules, or additions to
 existing modules, are also appreciated.
 
 
-References
+<a name="references"></a>
+
+6\. References
 ----------
 
 *	[Markdown Preprocessor on GitHub][repo]

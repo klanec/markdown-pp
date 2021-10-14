@@ -21,7 +21,7 @@ from MarkdownPP.Common import include_code_regex
 from MarkdownPP.Common import embedded_image_regex
 from MarkdownPP.Common import md_title_regex
 
-from MarkdownPP.Common import all_frontmatter
+from MarkdownPP.Common import frontmatter_storage
 
 
 class Include(Module):
@@ -58,7 +58,7 @@ class Include(Module):
 
             frontmatter = yaml.safe_load(frontmatter)   # get yaml frontmatter as dictionary from string
             if isinstance(frontmatter, list) or isinstance(frontmatter, dict):
-                all_frontmatter[PROJECT_DIR.INPUT_FILE] = frontmatter
+                frontmatter_storage.frontmatter[PROJECT_DIR.INPUT_FILE] = frontmatter
             
             # Sneakily substitute "!FRONTMATTER this," to "!FRONTMATTER id.id,"
             this_id = f"id.{frontmatter.get('id', 'UNDEF')}"
@@ -94,6 +94,7 @@ class Include(Module):
                     new_embed = line.replace(embed_img, replace_path)
                 transform = Transform(linenum=linenum, oper="swap", data=[new_embed])
                 transforms.append(transform)
+
         return transforms
     
 
@@ -131,8 +132,7 @@ class Include(Module):
                 frontmatter, data = match.groups()         # get yaml frontmatter as string
                 frontmatter = yaml.safe_load(frontmatter)   # get yaml frontmatter as dictionary from string
                 if isinstance(frontmatter, list) or isinstance(frontmatter, dict):
-                    #self.all_frontmatter[filename] = frontmatter
-                    all_frontmatter[filename] = frontmatter
+                    frontmatter_storage.frontmatter[filename] = frontmatter
                 
                 # Sneakily substitute "!FRONTMATTER this," to "!FRONTMATTER id.id,"
                 this_id = f"id.{frontmatter.get('id', 'UNDEF')}"

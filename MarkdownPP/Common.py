@@ -24,8 +24,12 @@ embedded_image_regex = re.compile(r'^(<img |\[?!\[[\w\s=-]*?\]).*?(src=\"|\()([\
 md_title_regex = re.compile(r"^(:?#+.*|={3,}|-{3,})$")
 # ===
 
-# This should be wrapped in a class
-all_frontmatter = {}
+# TODO: make this class name less annoying.
+class frontmatter_storage:
+    frontmatter = {}
+    def __init__(self):
+        self.frontmatter = {}
+
 
 class PROJECT_DIR:
 
