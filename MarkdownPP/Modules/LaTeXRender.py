@@ -13,6 +13,12 @@ from urllib.parse import urlencode
 
 from MarkdownPP.Module import Module
 from MarkdownPP.Transform import Transform
+from MarkdownPP.Common import PROJECT_DIR
+
+from sympy import preview
+from secrets import token_hex
+
+from os import path
 
 # $...$ (or $$...$$)
 singlelinere = re.compile(r"\$(\$?)..*\$(\$?)")
@@ -29,10 +35,12 @@ fencedcodere = re.compile(r"^((> *)?```\w*|(> *)?~~~~*(\s*{.*})?)$")
 class LaTeXRender(Module):
     """
     Module for rendering LaTeX enclosed between $ dollar signs $.
-    Rendering is performed using QuickLaTeX via ProblemSetMarmoset.
+    OLD: Rendering is performed using QuickLaTeX via ProblemSetMarmoset.
+
+    Latex is now handled locally using sympy. Don't know if sympy's latex engine is any good. Lets see.
     """
-    DEFAULT = False
-    REMOTE = True
+    DEFAULT = True
+    REMOTE = False
 
     def transform(self, data):
         transforms = []
@@ -92,29 +100,15 @@ class LaTeXRender(Module):
 
         return transforms
 
+
+
     def render(self, formula):
-        # Prepare the formula
-        formula = formula.replace("$", "")
-        encoded_formula = formula.replace("%", "[comment]").replace("+", "%2B")
-        display_formula = formula.replace("\n", "")
-        print('Rendering: %s ...' % display_formula)
-
-        # Prepare POST request to QuickLaTeX via ProblemSetMarmoset
-        # (for added processing)
-        params = urlencode({
-            'engine': 'quicklatex',
-            'input': encoded_formula,
-        })
-        headers = {"Content-type": "application/x-www-form-urlencoded",
-                   "Accept": "text/plain"}
-
-        # Make the request
-        with closing(HTTPConnection("www.problemsetmarmoset.com")) as conn:
-            conn.request("POST", "/latex/render.php", params, headers)
-            response = conn.getresponse()
-            img_url = response.read()
-
+        img_file = path.join(PROJECT_DIR.IMAGES_DIR, f'latex_render_{token_hex(4)}.png')
+        preview(formula, viewer='file', filename=img_file)
+        
         # Display as Markdown image
-        rendered_tex = '![{0}]({1} "{0}")\n'.format(display_formula,
-                                                    img_url.decode('utf-8'))
+        display_formula = formula.replace("\n", "")
+        rel_path = path.relpath(img_file, PROJECT_DIR.TOPLEVEL)
+        rendered_tex = '![{0}]({1} "{0}")\n'.format(display_formula, rel_path)
         return rendered_tex
+        

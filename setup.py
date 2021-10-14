@@ -4,18 +4,18 @@
 from setuptools import setup
 
 from os import path
-import shutil
+# import shutil
 
-if path.isfile('README.md'):
-    shutil.copyfile('README.md', 'README')
+# if path.isfile('README.md'):
+#     shutil.copyfile('README.md', 'README')
 
 setup(
     name='MarkdownPP',
     description='Markdown preprocessor',
-    version='1.5.1',
-    author='John Reese',
+    version='2.0.0',
+    author='John Reese, Nicholas Harris',
     author_email='john@noswap.com',
-    url='https://github.com/jreese/markdown-pp',
+    url='https://git.nixu.fi/nicholas.harris/markdownpp',
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',

@@ -1,17 +1,19 @@
----
-id: readme
-animal: dog
-breed: Dalmation
-name: Elvis
-owner:
-- Alice
-- Bob
----
-
-!TABLE_OF_TODOS
 
 
-!TABLE_OF_ERRORS
+**Table of TODOs**
+| Search Me   | TO DO                                                               |
+|:------------|:--------------------------------------------------------------------|
+| 8d48fcbb4c  | This is a default Red TODO tag                                      |
+| 8c3b5dc052  | This is a pretty Purple TODO tag                                    |
+| 770567fc2f  | LaTeX Multiline render is broken. Patch only worked for single line |
+| 250a2a1478  | Understand and document how multi-line latex should be written.     |
+
+
+
+**Table of Errors**
+| Search Me   | Error Tag                                 | Error Cause                             |
+|:------------|:------------------------------------------|:----------------------------------------|
+| 8f3af21156  | !FRONTMATTER all, shaolin(shadow, boxing) | Requested data structure not recognized |
 
 Markdown Preprocessor (MarkdownPP)
 ==================================
@@ -33,9 +35,27 @@ As an example, this document in raw format is named "readme.mdpp", and the
 generated document from MarkdownPP is named "readme.md" so that GitHub can find
 and process that document when viewing the repository.
 
-!TABLE_OF_CONTENTS LEVEL 3
+1\.  [Installation and Usage](#installationandusage)  
+2\.  [Arguments](#arguments)  
+3\.  [Modules](#modules)  
+3.1\.  [Includes](#includes)  
+3.2\.  [IncludeURLs](#includeurls)  
+3.3\.  [IncludeCode](#includecode)  
+3.4\.  [Include Directory](#includedirectory)  
+3.5\.  [Table of Contents](#tableofcontents)  
+3.6\.  [Frontmatter](#frontmatter)  
+3.7\.  [Comment](#comment)  
+3.8\.  [Error](#error)  
+3.9\.  [Reference](#reference)  
+3.10\.  [LaTeX Rendering](#latexrendering)  
+3.11\.  [YouTube Embeds](#youtubeembeds)  
+4\.  [Examples](#examples)  
+5\.  [Support](#support)  
+6\.  [References](#references)  
 
-Installation and Usage
+<a name="installationandusage"></a>
+
+1\. Installation and Usage
 ----------------------
 
 Pull this repository and run `python3 setup.py install`
@@ -46,7 +66,9 @@ Make sure to install the requirements:
 - pyyaml
 - tabulate
 
-Arguments
+<a name="arguments"></a>
+
+2\. Arguments
 ---------
 
 ```
@@ -98,10 +120,14 @@ Exclude allows for running all modules except the input list of modules. Warning
 
 Simply runs all modules including those disabled by default. Default disabled modules are those which make remote calls to external services.
 
-Modules
+<a name="modules"></a>
+
+3\. Modules
 --------
 
-### Includes
+<a name="includes"></a>
+
+### 3.1\. Includes
 
 Tag:
 
@@ -183,7 +209,9 @@ All files can be included in a single statement as below:
 ```
 
 
-### IncludeURLs
+<a name="includeurls"></a>
+
+### 3.2\. IncludeURLs
 
 Tag:
 
@@ -220,7 +248,9 @@ Compiling `index.mdpp` with the IncludeURL module will produce the following:
     Hello
     Remote World!
 
-### IncludeCode
+<a name="includecode"></a>
+
+### 3.3\. IncludeCode
 
 Tag:
 
@@ -286,7 +316,9 @@ Compiling `index.mdpp` with IncludeCode module will produce the following:
     Easy as that!
 
 
-### Include Directory
+<a name="includedirectory"></a>
+
+### 3.4\. Include Directory
 
 Tag:
 
@@ -332,7 +364,9 @@ You can recurse in to subdirectories as follows:
 `!INCLUDEDIR "files/", RECURSE`
 
 
-### Table of Contents
+<a name="tableofcontents"></a>
+
+### 3.5\. Table of Contents
 
 Tag:
 
@@ -364,7 +398,9 @@ Usage:
 
 `!TOC` can be substituted with `!TABLE_OF_CONTENTS`
 
-### Frontmatter
+<a name="frontmatter"></a>
+
+### 3.6\. Frontmatter
 
 Tag:
 
@@ -401,7 +437,9 @@ The tag:
 
 will generate the following table:
 
-!FRONTMATTER animal.dog, table(name, breed, owner)
+| name   | breed     | owner                               |
+|:-------|:----------|:------------------------------------|
+| Elvis  | Dalmation | <ul><li>Alice</li><li>Bob</li></ul> |
 
 **Supported shorthand selectors**
 - this (shorthand for the current file. The file's `id` tag will be dropped in its place)
@@ -416,7 +454,9 @@ will generate the following table:
 - asc / ascending
 - desc / descending
 
-### Comment
+<a name="comment"></a>
+
+### 3.7\. Comment
 
 This module allows you to add two types of comments to the output file. These will be rendered in colour
 such that they stand out. The 2 comment types as follows:
@@ -427,9 +467,9 @@ such that they stand out. The 2 comment types as follows:
 
 becomes:
 
-!COMMENT "This is a default Blue comment"
+<span style="color:DodgerBlue">COMMENT: This is a default Blue comment</span>
 
-!TODO "This is a default Red TODO tag"
+<span style="color:OrangeRed">TODO: This is a default Red TODO tag (8d48fcbb4c)</span>
 
 You can even change the colors (HTML colours are supported)
 
@@ -439,20 +479,29 @@ You can even change the colors (HTML colours are supported)
 
 becomes:
 
-!COMMENT "This is a Green comment" Green
+<span style="color:Green">COMMENT: This is a Green comment</span>
 
-!TODO "This is a pretty Purple TODO tag" Purple
+<span style="color:Purple">TODO: This is a pretty Purple TODO tag (8c3b5dc052)</span>
 
 Another important function of the Comment module is the ability to generate a dynamic table
 of all TODOs in the final output.
 
 simply adding the `!TABLE_OF_TODOS` or `!TOT` for short will give the below:
 
-!TABLE_OF_TODOS
+
+**Table of TODOs**
+| Search Me   | TO DO                                                               |
+|:------------|:--------------------------------------------------------------------|
+| 8d48fcbb4c  | This is a default Red TODO tag                                      |
+| 8c3b5dc052  | This is a pretty Purple TODO tag                                    |
+| 770567fc2f  | LaTeX Multiline render is broken. Patch only worked for single line |
+| 250a2a1478  | Understand and document how multi-line latex should be written.     |
 
 Searching the `Search Me` token will show the corresponding TODO.
 
-### Error
+<a name="error"></a>
+
+### 3.8\. Error
 
 The Error module handles formatting `!ERROR` tags, which are placed automatically
 where the preprocessor has failed in some way. This tag does not need to be used
@@ -466,13 +515,19 @@ in your text editor. Adding a tag that will fail will demonstrate this:
 
 The oputput is:
 
-!FRONTMATTER all, shaolin(shadow, boxing)
+<span style="color:FireBrick" id="8f3af21156">ERROR 8f3af21156: !FRONTMATTER all, shaolin(shadow, boxing)</span> <!-- !ERROR:  Requested data structure not recognized -->
 
 And the table of errors:
 
-!TABLE_OF_ERRORS
 
-### Reference
+**Table of Errors**
+| Search Me   | Error Tag                                 | Error Cause                             |
+|:------------|:------------------------------------------|:----------------------------------------|
+| 8f3af21156  | !FRONTMATTER all, shaolin(shadow, boxing) | Requested data structure not recognized |
+
+<a name="reference"></a>
+
+### 3.9\. Reference
 
 Similarly, MarkdownPP can generate a list of references that follow Markdown's
 alternate link syntax, eg `[name]: <url> "Title"`.  A list of links will be
@@ -483,10 +538,12 @@ the document to be included in the list.
 
 Note, only links in the format `[name]: <url> "Title"` are included in the list.
 
-### LaTeX Rendering
+<a name="latexrendering"></a>
 
-!TODO "LaTeX Multiline render is broken. Patch only worked for single line"
-!TODO "Understand and document how multi-line latex should be written."
+### 3.10\. LaTeX Rendering
+
+<span style="color:OrangeRed">TODO: LaTeX Multiline render is broken. Patch only worked for single line (770567fc2f)</span>
+<span style="color:OrangeRed">TODO: Understand and document how multi-line latex should be written. (250a2a1478)</span>
 
 Since this module relies on an external service to generate pngs from LaTeX,
 it is disabled by default. Include it explicitly with `-i`/`--incude` or `-a`/`--all`
@@ -500,10 +557,13 @@ For example,
 
 becomes
 
-$\displaystyle \int x^2 = \frac{x^3}{3} + C$
+![$\displaystyle \int x^2 = \frac{x^3}{3} + C$](images/latex_render_3f31d981.png "$\displaystyle \int x^2 = \frac{x^3}{3} + C$")
 
 
-### YouTube Embeds
+
+<a name="youtubeembeds"></a>
+
+### 3.11\. YouTube Embeds
 
 Since this module makes external calls it is disabled by default. 
 Include it explicitly with `-i`/`--incude` or `-a`/`--all`
@@ -518,10 +578,12 @@ For example,
 
 becomes
 
-!VIDEO "http://www.youtube.com/embed/7aEYoP5-duY"
+[![Link to Youtube video](images/youtube/7aEYoP5-duY.png)](http://www.youtube.com/watch?v=7aEYoP5-duY)
 
 
-Examples
+<a name="examples"></a>
+
+4\. Examples
 --------
 
 Example file.mdpp:
@@ -558,7 +620,9 @@ The preprocessor would generate the following Markdown-ready document file.md:
 	[github]: http://github.com "GitHub"
 
 
-Support
+<a name="support"></a>
+
+5\. Support
 -------
 
 If you find any problems with MarkdownPP, or have any feature requests, please
@@ -567,7 +631,9 @@ contributions are *always* welcome, and ideas for new modules, or additions to
 existing modules, are also appreciated.
 
 
-References
+<a name="references"></a>
+
+6\. References
 ----------
 
 *	[Markdown Preprocessor on GitHub][repo]
